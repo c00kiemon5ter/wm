@@ -6,8 +6,9 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
-#include <xcb/xcb_event.h>
-#include <xcb/xcb_ewmh.h>
+#ifdef XINERAMA
+#include <xcb/xinerama.h>
+#endif
 
 #include "cookiewm.h"
 #include "global.h"
