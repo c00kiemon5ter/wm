@@ -47,25 +47,21 @@ int main(void)
     char *socket_path = getenv(SOCKET_ENV_VAR);
     if (socket_path == NULL || strlen(socket_path) == 0)
         warn("environmental variable '%s' is not set or empty - using default value: %s\n", SOCKET_ENV_VAR, DEFAULT_SOCKET_PATH);
-    else if (sizeof(sock_address.sun_path) <= strlen(socket_path))
-        err("value too long for environmental variable '%s'\n", SOCKET_ENV_VAR);
 
     sock_address.sun_family = AF_UNIX;
-    strncpy(sock_address.sun_path, (socket_path == NULL ? DEFAULT_SOCKET_PATH : socket_path), sizeof(sock_address.sun_path));
-    sock_address.sun_path[sizeof(sock_address.sun_path) - 1] = 0;
+    size_t n = snprintf(sock_address.sun_path, sizeof(sock_address.sun_path), "%s", socket_path);
+    if (n >= sizeof(sock_address.sun_path))
+        err("value too long for environmental variable '%s'\n", SOCKET_ENV_VAR);
     unlink(socket_path);
-
-    PRINTF("socket_path: %s\n", socket_path);
-    PRINTF("sun so path: %s\n", sock_address.sun_path);
 
     sock_fd = socket(AF_UNIX, SOCK_STREAM, 0);
     if (sock_fd == -1)
         err("failed to create socket\n");
 
-    if (bind(sock_fd, (struct sockaddr *) &sock_address, sizeof(sock_address)) != 0)
+    if (bind(sock_fd, (struct sockaddr *) &sock_address, sizeof(sock_address)) == -1)
         err("failed to bind to socket\n");
 
-    if (listen(sock_fd, SOMAXCONN) != 0)
+    if (listen(sock_fd, SOMAXCONN) == -1)
         err("failed to listen for connections\n");
 
     /* setup server connection */
@@ -97,17 +93,13 @@ int main(void)
                 int ret_fd = accept(sock_fd, NULL, 0);
                 if (ret_fd == -1) {
                     warn("failed to accept connection\n");
-                } else {
-                    /* FIXME revisit logic and operations */
-                    size_t n = recv(ret_fd, msg, sizeof(msg), 0);
-                    if (n > 0) {
-                        msg[n] = 0;
-                        process_message(msg, rsp);
-                        size_t rsplen = strlen(rsp);
-                        if (send(ret_fd, rsp, rsplen, 0) == -1)
-                            warn("failed to send response\n");
-                        close(ret_fd);
-                    }
+                } else if (recv(ret_fd, msg, sizeof(msg), 0) > 0) {
+                    msg[n] = 0;
+                    process_message(msg, rsp);
+                    size_t rsplen = strlen(rsp);
+                    if (send(ret_fd, rsp, rsplen, 0) == -1)
+                        warn("failed to send response\n");
+                    close(ret_fd);
                 }
             }
 
