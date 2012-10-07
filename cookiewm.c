@@ -10,10 +10,13 @@
 #include <xcb/xcb_ewmh.h>
 
 #include "cookiewm.h"
+#include "global.h"
 #include "helpers.h"
 #include "common.h"
 #include "events.h"
 #include "messages.h"
+
+configuration cfg;
 
 void setup(void)
 {
@@ -27,7 +30,7 @@ void register_events(void)
 
 void quit(void)
 {
-    running = false;
+    cfg.running = false;
 }
 
 int main(void)
@@ -38,9 +41,6 @@ int main(void)
     struct sockaddr_un sock_address;
     char msg[BUFSIZ];
     char rsp[BUFSIZ];
-
-    /* FIXME handle ewmh elsewhere ? */
-    xcb_ewmh_connection_t *ewmh = NULL;
 
     /* setup socket connection */
     char *socket_path = getenv(SOCKET_ENV_VAR);
@@ -68,10 +68,10 @@ int main(void)
         err("failed to listen for connections\n");
 
     /* setup server connection */
-    dpy = xcb_connect(NULL, &default_screen);
-    if (xcb_connection_has_error(dpy))
+    cfg.connection = xcb_connect(NULL, &default_screen);
+    if (xcb_connection_has_error(cfg.connection))
         err("failed to connect to server\n");
-    dpy_fd = xcb_get_file_descriptor(dpy);
+    dpy_fd = xcb_get_file_descriptor(cfg.connection);
 
     setup();
     register_events();
@@ -80,11 +80,11 @@ int main(void)
     //update_root_geom();
 
     int sel = MAX(sock_fd, dpy_fd) + 1;
-    running = true;
+    cfg.running = true;
     xcb_generic_event_t *event;
 
-    while (running) {
-        xcb_flush(dpy);
+    while (cfg.running) {
+        xcb_flush(cfg.connection);
 
         FD_ZERO(&fds);
         FD_SET(sock_fd, &fds);
@@ -112,24 +112,24 @@ int main(void)
 
             /* new event arrived */
             if (FD_ISSET(dpy_fd, &fds)) {
-                while ((event = xcb_poll_for_event(dpy)) != NULL) {
+                while ((event = xcb_poll_for_event(cfg.connection)) != NULL) {
                     handle_event(event);
                     free(event);
                 }
             }
         }
 
-        if (xcb_connection_has_error(dpy))
+        if (xcb_connection_has_error(cfg.connection))
             err("connection has errors\n");
     }
 
     close(sock_fd);
 
-    xcb_ewmh_connection_wipe(ewmh);
-    free(ewmh);
+    xcb_ewmh_connection_wipe(cfg.ewmh);
+    free(cfg.ewmh);
 
-    xcb_flush(dpy);
-    xcb_disconnect(dpy);
+    xcb_flush(cfg.connection);
+    xcb_disconnect(cfg.connection);
 
     return EXIT_SUCCESS;
 }
