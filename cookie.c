@@ -19,8 +19,10 @@ int main(int argc, char *argv[])
         err("no arguments given\n");
 
     char *socket_path = getenv(SOCKET_ENV_VAR);
-    if (socket_path == NULL || strlen(socket_path) == 0)
+    if (socket_path == NULL || strlen(socket_path) == 0) {
         warn("environmental variable '%s' is not set or empty - using default value: %s\n", SOCKET_ENV_VAR, DEFAULT_SOCKET_PATH);
+        socket_path = DEFAULT_SOCKET_PATH;
+    }
 
     sock_address.sun_family = AF_UNIX;
     size_t n = snprintf(sock_address.sun_path, sizeof(sock_address.sun_path), "%s", socket_path);

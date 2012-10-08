@@ -13,7 +13,6 @@ void warn(char *fmt, ...)
     va_end(ap);
 }
 
-__attribute__((noreturn))
 void err(char *fmt, ...)
 {
     va_list ap;

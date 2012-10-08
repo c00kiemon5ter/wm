@@ -3,12 +3,16 @@
 #include <xcb/xcb_event.h>
 
 #include "events.h"
+#include "global.h"
+#include "helpers.h"
 
 void handle_event(xcb_generic_event_t *evt)
 {
     switch (XCB_EVENT_RESPONSE_TYPE(evt)) {
         case XCB_MAP_REQUEST:
             puts("map_request(evt)");
+            xcb_map_request_event_t *e = (xcb_map_request_event_t *) evt;
+            xcb_map_window(cfg.connection, e->window);
             break;
         case XCB_DESTROY_NOTIFY:
             puts("destroy_notify(evt)");

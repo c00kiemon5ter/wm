@@ -4,14 +4,14 @@ WM_NAME = "cookiewm"
 CL_NAME = "cookie"
 
 CC      = cc
-LIBS    = -lm -lxcb -lxcb-icccm -lxcb-ewmh
-CFLAGS  = -std=c99 -pedantic -Wall -Wextra -DWM_NAME=\"$(WM_NAME)\" -DVERSION=\"$(VERSION)\" -DXINERAMA
+LIBS    = -lxcb -lxcb-icccm -lxcb-ewmh -lxcb-xinerama -lxcb-randr
+CFLAGS  = -std=c99 -pedantic -Wall -Wextra -DWM_NAME=\"$(WM_NAME)\" -DVERSION=\"$(VERSION)\"
 LDFLAGS = $(LIBS)
 
 PREFIX   ?= /usr/local
 BINPREFIX = $(PREFIX)/bin
 
-WM_SRC = cookiewm.c helpers.c events.c messages.c
+WM_SRC = cookiewm.c helpers.c screen.c ewmh.c events.c messages.c
 CL_SRC = cookie.c helpers.c
 
 WM_OBJ = $(WM_SRC:.c=.o)

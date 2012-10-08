@@ -1,8 +1,8 @@
 #ifndef _COOKIEWM_H
 #define _COOKIEWM_H
 
-static void setup(void);
-static void register_events(void);
-static void quit(void);
+#define ROOT_EVENT_MASK (XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY)
+
+void quit(void);
 
 #endif

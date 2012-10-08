@@ -14,7 +14,7 @@
 #define BOOLSTR(A)      ((A) ? "true" : "false")
 
 #ifdef DEBUG
-#  define PRINTF(x,...) printf(x, __VA_ARGS__)
+#  define PRINTF(x,...) printf(":: %5d:%15.15s: "x, __LINE__, __FUNCTION__, __VA_ARGS__)
 #else
 #  define PRINTF(x,...) ((void)0)
 #endif
