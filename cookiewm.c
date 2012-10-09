@@ -18,26 +18,8 @@
 configuration cfg;
 
 /**
- * set the event mask for the root window
- * the event mask defines for which events
- * we will be notified about.
- * if setting the event mask fails, then
- * another window manager is running, as
- * XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT
- * can be only be set by one client.
- */
-static bool set_event_mask(void)
-{
-    uint32_t values[] = {ROOT_EVENT_MASK};
-    xcb_void_cookie_t   cookie = xcb_change_window_attributes_checked(cfg.connection, cfg.screen->root, XCB_CW_EVENT_MASK, values);
-    xcb_generic_error_t *error = xcb_request_check(cfg.connection, cookie);
-
-    return (error != NULL);
-}
-
-/**
  * setup server connection
- * get screen info
+ * set screen and monitor info
  * set root event mask - check for other wm
  * set ewmh atoms and default wm_name
  */
@@ -52,14 +34,25 @@ static void init_xcb(int *dpy_fd)
     for (int screen = 0; screen < cfg.default_screen; screen++, xcb_screen_next(&iter));
     cfg.screen = iter.data;
 
-    /* check for randr and xinerama
-     * extensions - get screen info
+    /* check for randr and xinerama extensions
+     * if not available try the old dual head.
+     * will initialize monitor structs.
      */
     if (!randr() && !xinerama())
         zaphod();
 
-    /* check if another wm is running */
-    if (set_event_mask()) {
+    /* set the event mask for the root window
+     * the event mask defines for which events
+     * we will be notified about.
+     * if setting the event mask fails, then
+     * another window manager is running, as
+     * XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT
+     * can be only be set by one client.
+     */
+    uint32_t values[] = {ROOT_EVENT_MASK};
+    xcb_void_cookie_t   cookie = xcb_change_window_attributes_checked(cfg.connection, cfg.screen->root, XCB_CW_EVENT_MASK, values);
+    xcb_generic_error_t *error = xcb_request_check(cfg.connection, cookie);
+    if (error != NULL) {
         xcb_disconnect(cfg.connection);
         err("another window manager is already running\n");
     }
@@ -111,7 +104,8 @@ static void check_event(int dpy_fd, fd_set *fds)
         xcb_generic_event_t *event;
         while ((event = xcb_poll_for_event(cfg.connection))) {
             handle_event(event);
-            free(event);
+            if (event)
+                free(event);
         }
     }
 
@@ -175,23 +169,24 @@ void quit(void)
     cfg.running = false;
 }
 
-static void cleanup(void)
-{
-    xcb_ewmh_connection_wipe(cfg.ewmh);
-    free(cfg.ewmh);
-    xcb_flush(cfg.connection);
-    xcb_disconnect(cfg.connection);
-}
-
 int main(void)
 {
     int dpy_fd, sock_fd;
 
+    /* initialization */
     init_xcb(&dpy_fd);
     init_socket(&sock_fd);
-    //init_wm();
+
+    /* main loop */
     wait_event_or_message(dpy_fd, sock_fd);
-    cleanup();
+
+    /* cleanup */
+    xcb_ewmh_connection_wipe(cfg.ewmh);
+    if (cfg.ewmh)
+        free(cfg.ewmh);
+
+    xcb_flush(cfg.connection);
+    xcb_disconnect(cfg.connection);
 
     if (dpy_fd)
         close(dpy_fd);
