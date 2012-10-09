@@ -24,13 +24,8 @@ bool randr(void)
         xcb_randr_get_crtc_info_cookie_t cookie = xcb_randr_get_crtc_info(cfg.connection, info[crtc], XCB_CURRENT_TIME);
         xcb_randr_get_crtc_info_reply_t *reply = xcb_randr_get_crtc_info_reply(cfg.connection, cookie, NULL);
 
-        int outputs = xcb_randr_get_crtc_info_outputs_length(reply);
-        if (!outputs)
+        if (xcb_randr_get_crtc_info_outputs_length(reply) == 0)
             continue;
-
-        PRINTF("info for crtc: %d\n", crtc);
-        PRINTF("x: %5d\ty: %5d\n", reply->x,     reply->y);
-        PRINTF("w: %5d\th: %5d\n", reply->width, reply->height);
 
         /* FIXME init monitor struct */
         int x = reply->x;
@@ -38,28 +33,32 @@ bool randr(void)
         int w = reply->width;
         int h = reply->height;
 
-        /* FIXME do we need this ? */
-        xcb_randr_output_t *info = xcb_randr_get_crtc_info_outputs(reply);
+        PRINTF("info for crtc: %d\n", crtc);
+        PRINTF("x: %5d\n", x);
+        PRINTF("y: %5d\n", y);
+        PRINTF("w: %5d\n", w);
+        PRINTF("h: %5d\n", h);
 
-        PRINTF("outputs: %d\n", outputs);
-
-        for (int output = 0; output < outputs; output++) {
-            xcb_randr_get_output_info_cookie_t cookie = xcb_randr_get_output_info(cfg.connection, info[output], XCB_CURRENT_TIME);
-            xcb_randr_get_output_info_reply_t *reply = xcb_randr_get_output_info_reply(cfg.connection, cookie, NULL);
-
-            int name_len = xcb_randr_get_output_info_name_length(reply);
-            //char *name = memcpy(&name, xcb_randr_get_output_info_name(reply), name_len);
-            //name[name_len] = 0;
-
-            PRINTF("info for output: %d\n", output);
-            //PRINTF("name: %s\n", name);
-            PRINTF("name length: %zd\n", name_len);
-            PRINTF("mm_width: %5d\tmm_height: %5d\n", reply->mm_width, reply->mm_height);
-
-            if (reply)
-                free(reply);
-        }
-        /* up to here */
+        // xcb_randr_output_t *info = xcb_randr_get_crtc_info_outputs(reply);
+        // int outputs = xcb_randr_get_crtc_info_outputs_length(reply);
+        //
+        // PRINTF("outputs: %d\n", outputs);
+        //
+        // for (int output = 0; output < outputs; output++) {
+        //     xcb_randr_get_output_info_cookie_t cookie = xcb_randr_get_output_info(cfg.connection, info[output], XCB_CURRENT_TIME);
+        //     xcb_randr_get_output_info_reply_t *reply = xcb_randr_get_output_info_reply(cfg.connection, cookie, NULL);
+        //
+        //     size_t name_len = xcb_randr_get_output_info_name_length(reply) + 1;
+        //     char name[BUFLEN];
+        //     snprintf(name, MIN(name_len, sizeof(name)), "%s", xcb_randr_get_output_info_name(reply));
+        //
+        //     PRINTF("info for output: %d -- %s\n", output, name);
+        //     PRINTF("mm_width : %5d\n", reply->mm_width);
+        //     PRINTF("mm_height: %5d\n", reply->mm_height);
+        //
+        //     if (reply)
+        //         free(reply);
+        // }
 
         if (reply)
             free(reply);
@@ -96,10 +95,16 @@ bool xinerama(void)
 
     for (int screen = 0; screen < screens; screen++) {
         /* FIXME init monitor struct */
+        int x = info[screen].x_org;
+        int y = info[screen].y_org;
+        int w = info[screen].width;
+        int h = info[screen].height;
 
         PRINTF("info for screen: %d\n", screen);
-        PRINTF("x: %5d\ty: %5d\n", info[screen].x_org, info[screen].y_org);
-        PRINTF("w: %5d\th: %5d\n", info[screen].width, info[screen].height);
+        PRINTF("x: %5d\n", x);
+        PRINTF("y: %5d\n", y);
+        PRINTF("w: %5d\n", w);
+        PRINTF("h: %5d\n", h);
     }
 
     if (reply)
@@ -115,5 +120,10 @@ void zaphod(void)
     int y = 0;
     int w = cfg.screen->width_in_pixels;
     int h = cfg.screen->height_in_pixels;
+
+    PRINTF("x: %5d\n", x);
+    PRINTF("y: %5d\n", y);
+    PRINTF("w: %5d\n", w);
+    PRINTF("h: %5d\n", h);
 }
 
