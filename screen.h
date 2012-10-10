@@ -1,5 +1,5 @@
-#ifndef _SCREEN_H
-#define _SCREEN_H
+#ifndef SCREEN_H
+#define SCREEN_H
 
 #include <stdbool.h>
 

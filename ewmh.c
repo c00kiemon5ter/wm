@@ -7,11 +7,11 @@
 
 void ewmh_init(void)
 {
-    if ((cfg.ewmh = malloc(sizeof(xcb_ewmh_connection_t))) == NULL)
+    if (!(cfg.ewmh = malloc(sizeof(xcb_ewmh_connection_t))))
         err("failed to allocate ewmh object\n");
 
     xcb_intern_atom_cookie_t *ewmh_cookies = xcb_ewmh_init_atoms(cfg.connection, cfg.ewmh);
-    xcb_ewmh_init_atoms_replies(cfg.ewmh, ewmh_cookies, NULL);
+    xcb_ewmh_init_atoms_replies(cfg.ewmh, ewmh_cookies, (void *)0);
 }
 
 void ewmh_set_supported_atoms(void)

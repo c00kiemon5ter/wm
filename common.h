@@ -1,5 +1,5 @@
-#ifndef _COMMON_H
-#define _COMMON_H
+#ifndef COMMON_H
+#define COMMON_H
 
 #define DEFAULT_SOCKET_PATH  "/tmp/.cookiewm.socket"
 #define SOCKET_ENV_VAR       "COOKIE_SOCKET"

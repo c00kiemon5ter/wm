@@ -15,7 +15,7 @@
 #include "events.h"
 #include "messages.h"
 
-configuration cfg;
+global_configuration_t cfg;
 
 /**
  * setup server connection
@@ -25,7 +25,7 @@ configuration cfg;
  */
 static void init_xcb(int *dpy_fd)
 {
-    cfg.connection = xcb_connect(NULL, &cfg.default_screen);
+    cfg.connection = xcb_connect((void *)0, &cfg.default_screen);
     if (xcb_connection_has_error(cfg.connection))
         err("connection has errors\n");
     *dpy_fd = xcb_get_file_descriptor(cfg.connection);
@@ -52,7 +52,7 @@ static void init_xcb(int *dpy_fd)
     uint32_t values[] = {ROOT_EVENT_MASK};
     xcb_void_cookie_t   cookie = xcb_change_window_attributes_checked(cfg.connection, cfg.screen->root, XCB_CW_EVENT_MASK, values);
     xcb_generic_error_t *error = xcb_request_check(cfg.connection, cookie);
-    if (error != NULL) {
+    if (error != (void *)0) {
         xcb_disconnect(cfg.connection);
         err("another window manager is already running\n");
     }
@@ -70,7 +70,7 @@ static void init_socket(int *sock_fd)
 {
     struct sockaddr_un sock_address;
     char *socket_path = getenv(SOCKET_ENV_VAR);
-    if (socket_path == NULL || strlen(socket_path) == 0) {
+    if (!socket_path || strlen(socket_path) == 0) {
         warn("environmental variable '%s' is not set or empty - using default value: %s\n", SOCKET_ENV_VAR, DEFAULT_SOCKET_PATH);
         socket_path = DEFAULT_SOCKET_PATH;
     }
@@ -124,7 +124,7 @@ static void check_message(int sock_fd, fd_set *fds)
     char rsp[BUFSIZ];
 
     if (FD_ISSET(sock_fd, fds)) {
-        int ret_fd = accept(sock_fd, NULL, 0);
+        int ret_fd = accept(sock_fd, (void *)0, (void *)0);
         if (ret_fd == -1) {
             warn("failed to accept connection\n");
             return;
@@ -136,7 +136,7 @@ static void check_message(int sock_fd, fd_set *fds)
             return;
         }
 
-        msg[n] = 0;
+        msg[n] = '\0';
         process_message(msg, rsp);
         if (send(ret_fd, rsp, strlen(rsp), 0) == -1)
             warn("failed to send response\n");
@@ -157,7 +157,7 @@ static void wait_event_or_message(int dpy_fd, int sock_fd)
         FD_SET(sock_fd, &fds);
         FD_SET(dpy_fd, &fds);
 
-        if (select(sel, &fds, NULL, NULL, NULL))  {
+        if (select(sel, &fds, (void *)0, (void *)0, (void *)0))  {
             check_message(sock_fd, &fds);
             check_event(dpy_fd, &fds);
         }
