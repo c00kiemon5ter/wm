@@ -9,11 +9,11 @@
 
 int main(int argc, char *argv[])
 {
-    int sock_fd;
-    struct sockaddr_un sock_address;
+    int sock_fd = 0;
+    struct sockaddr_un sock_address = { 0, { 0 } };
     size_t msglen = 0;
-    char msg[BUFSIZ];
-    char rsp[BUFSIZ];
+    char msg[BUFSIZ] = { 0 };
+    char rsp[BUFSIZ] = { 0 };
 
     if (argc < 2)
         err("no arguments given\n");

@@ -50,7 +50,7 @@ static void init_xcb(int *dpy_fd)
      * can be only be set by one client.
      */
     uint32_t values[] = {ROOT_EVENT_MASK};
-    xcb_void_cookie_t   cookie = xcb_change_window_attributes_checked(cfg.connection, cfg.screen->root, XCB_CW_EVENT_MASK, values);
+    xcb_void_cookie_t cookie = xcb_change_window_attributes_checked(cfg.connection, cfg.screen->root, XCB_CW_EVENT_MASK, values);
     xcb_generic_error_t *error = xcb_request_check(cfg.connection, cookie);
     if (error != (void *)0) {
         xcb_disconnect(cfg.connection);
@@ -68,7 +68,7 @@ static void init_xcb(int *dpy_fd)
  */
 static void init_socket(int *sock_fd)
 {
-    struct sockaddr_un sock_address;
+    struct sockaddr_un sock_address = { 0,  { 0 } };
     char *socket_path = getenv(SOCKET_ENV_VAR);
     if (!socket_path || strlen(socket_path) == 0) {
         warn("environmental variable '%s' is not set or empty - using default value: %s\n", SOCKET_ENV_VAR, DEFAULT_SOCKET_PATH);
@@ -101,7 +101,7 @@ static void init_socket(int *sock_fd)
 static void check_event(int dpy_fd, fd_set *fds)
 {
     if (FD_ISSET(dpy_fd, fds)) {
-        xcb_generic_event_t *event;
+        xcb_generic_event_t *event = (void *)0;
         while ((event = xcb_poll_for_event(cfg.connection))) {
             handle_event(event);
             if (event)
@@ -120,8 +120,8 @@ static void check_event(int dpy_fd, fd_set *fds)
  */
 static void check_message(int sock_fd, fd_set *fds)
 {
-    char msg[BUFSIZ];
-    char rsp[BUFSIZ];
+    char msg[BUFSIZ] = { 0 };
+    char rsp[BUFSIZ] = { 0 };
 
     if (FD_ISSET(sock_fd, fds)) {
         int ret_fd = accept(sock_fd, (void *)0, (void *)0);
@@ -148,9 +148,8 @@ static void check_message(int sock_fd, fd_set *fds)
 
 static void wait_event_or_message(int dpy_fd, int sock_fd)
 {
-    fd_set fds;
+    fd_set fds = { { 0 } };
     int sel = MAX(sock_fd, dpy_fd) + 1;
-    cfg.running = true;
 
     while (cfg.running) {
         FD_ZERO(&fds);
@@ -171,7 +170,8 @@ void quit(void)
 
 int main(void)
 {
-    int dpy_fd, sock_fd;
+    int dpy_fd = 0, sock_fd = 0;
+    cfg.running = true;
 
     /* initialization */
     init_xcb(&dpy_fd);
