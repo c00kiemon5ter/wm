@@ -18,9 +18,9 @@ bool randr(void)
     xcb_randr_get_screen_resources_reply_t *reply = xcb_randr_get_screen_resources_reply(cfg.connection, cookie, (void *)0);
     xcb_randr_crtc_t *info = xcb_randr_get_screen_resources_crtcs(reply);
 
-    PRINTF("randr crtcs: %d\n", reply->num_crtcs);
+    PRINTF("randr num crtcs: %zd\n", reply->num_crtcs);
 
-    for (int crtc = 0; crtc < reply->num_crtcs; crtc++) {
+    for (uint16_t crtc = 0; crtc < reply->num_crtcs; crtc++) {
         xcb_randr_get_crtc_info_cookie_t cookie = xcb_randr_get_crtc_info(cfg.connection, info[crtc], XCB_CURRENT_TIME);
         xcb_randr_get_crtc_info_reply_t *reply = xcb_randr_get_crtc_info_reply(cfg.connection, cookie, (void *)0);
 
@@ -28,10 +28,10 @@ bool randr(void)
             continue;
 
         /* FIXME init monitor struct */
-        int x = reply->x;
-        int y = reply->y;
-        int w = reply->width;
-        int h = reply->height;
+        int16_t x = reply->x;
+        int16_t y = reply->y;
+        uint16_t w = reply->width;
+        uint16_t h = reply->height;
 
         PRINTF("info for crtc: %d\n", crtc);
         PRINTF("x: %5d\n", x);
@@ -95,10 +95,10 @@ bool xinerama(void)
 
     for (int screen = 0; screen < screens; screen++) {
         /* FIXME init monitor struct */
-        int x = info[screen].x_org;
-        int y = info[screen].y_org;
-        int w = info[screen].width;
-        int h = info[screen].height;
+        int16_t x = info[screen].x_org;
+        int16_t y = info[screen].y_org;
+        uint16_t w = info[screen].width;
+        uint16_t h = info[screen].height;
 
         PRINTF("info for screen: %d\n", screen);
         PRINTF("x: %5d\n", x);
@@ -116,10 +116,10 @@ bool xinerama(void)
 void zaphod(void)
 {
     /* FIXME init monitor struct */
-    int x = 0;
-    int y = 0;
-    int w = cfg.screen->width_in_pixels;
-    int h = cfg.screen->height_in_pixels;
+    int16_t x = 0;
+    int16_t y = 0;
+    uint16_t w = cfg.screen->width_in_pixels;
+    uint16_t h = cfg.screen->height_in_pixels;
 
     PRINTF("x: %5d\n", x);
     PRINTF("y: %5d\n", y);

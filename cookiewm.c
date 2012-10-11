@@ -31,7 +31,7 @@ static void init_xcb(int *dpy_fd)
     *dpy_fd = xcb_get_file_descriptor(cfg.connection);
 
     xcb_screen_iterator_t iter = xcb_setup_roots_iterator(xcb_get_setup(cfg.connection));
-    for (int screen = 0; screen < cfg.default_screen; screen++, xcb_screen_next(&iter));
+    for (int screen = 0; iter.rem && screen != cfg.default_screen; xcb_screen_next(&iter), screen++);
     cfg.screen = iter.data;
 
     /* check for randr and xinerama extensions
