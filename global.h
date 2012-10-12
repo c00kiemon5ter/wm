@@ -56,6 +56,19 @@ typedef struct monitor_t {
     struct monitor_t *next;
 } monitor_t;
 
+/**
+ * A tag
+ *
+ * nbit - the position on the bitmask
+ * name - the tag name/label
+ * next - the next available tag
+ */
+typedef struct tag_t {
+    unsigned int bit;
+    char name[BUFLEN];
+    struct tag_t *next;
+} tag_t;
+
 /* global shared variables */
 typedef struct {
     /* state of the window manager */
