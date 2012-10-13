@@ -20,24 +20,31 @@ bool randr(void)
 
     PRINTF("randr num crtcs: %zd\n", reply->num_crtcs);
 
+    monitor_t **m = &cfg.monitors;
+
     for (uint16_t crtc = 0; crtc < reply->num_crtcs; crtc++) {
         xcb_randr_get_crtc_info_cookie_t cookie = xcb_randr_get_crtc_info(cfg.connection, info[crtc], XCB_CURRENT_TIME);
         xcb_randr_get_crtc_info_reply_t *reply = xcb_randr_get_crtc_info_reply(cfg.connection, cookie, (void *)0);
 
+        /* if crtc not associated with any monitor, skip it */
         if (xcb_randr_get_crtc_info_outputs_length(reply) == 0)
             continue;
 
-        /* FIXME init monitor struct */
-        int16_t x = reply->x;
-        int16_t y = reply->y;
-        uint16_t w = reply->width;
-        uint16_t h = reply->height;
+        if (!(*m = calloc(1, sizeof(monitor_t))))
+            err("failed to allocate crtc: %d\n", crtc);
+
+        (*m)->geom.x = reply->x;
+        (*m)->geom.y = reply->y;
+        (*m)->geom.width  = reply->width;
+        (*m)->geom.height = reply->height;
 
         PRINTF("info for crtc: %d\n", crtc);
-        PRINTF("x: %5d\n", x);
-        PRINTF("y: %5d\n", y);
-        PRINTF("w: %5d\n", w);
-        PRINTF("h: %5d\n", h);
+        PRINTF("x: %5d\n", (*m)->geom.x);
+        PRINTF("y: %5d\n", (*m)->geom.y);
+        PRINTF("w: %5d\n", (*m)->geom.width);
+        PRINTF("h: %5d\n", (*m)->geom.height);
+
+        m = &(*m)->next;
 
         // xcb_randr_output_t *info = xcb_randr_get_crtc_info_outputs(reply);
         // int outputs = xcb_randr_get_crtc_info_outputs_length(reply);
@@ -60,12 +67,10 @@ bool randr(void)
         //         free(reply);
         // }
 
-        if (reply)
-            free(reply);
+        free(reply);
     }
 
-    if (reply)
-        free(reply);
+    free(reply);
 
     return true;
 }
@@ -77,8 +82,7 @@ bool xinerama(void)
     if (xcb_get_extension_data(cfg.connection, &xcb_xinerama_id)->present) {
         xcb_xinerama_is_active_reply_t *reply = xcb_xinerama_is_active_reply(cfg.connection, xcb_xinerama_is_active(cfg.connection), (void *)0);
         is_active = reply->state;
-        if (reply)
-            free(reply);
+        free(reply);
     }
 
     if (!is_active) {
@@ -93,37 +97,46 @@ bool xinerama(void)
 
     PRINTF("xinerama screens: %d\n", screens);
 
+    monitor_t **m = &cfg.monitors;
+
     for (int screen = 0; screen < screens; screen++) {
-        /* FIXME init monitor struct */
-        int16_t x = info[screen].x_org;
-        int16_t y = info[screen].y_org;
-        uint16_t w = info[screen].width;
-        uint16_t h = info[screen].height;
+        if (!(*m = calloc(1, sizeof(monitor_t))))
+            err("failed to allocate crtc: %d\n", screen);
+
+        (*m)->geom.x = info[screen].x_org;
+        (*m)->geom.y = info[screen].y_org;
+        (*m)->geom.width  = info[screen].width;
+        (*m)->geom.height = info[screen].height;
 
         PRINTF("info for screen: %d\n", screen);
-        PRINTF("x: %5d\n", x);
-        PRINTF("y: %5d\n", y);
-        PRINTF("w: %5d\n", w);
-        PRINTF("h: %5d\n", h);
+        PRINTF("x: %5d\n", (*m)->geom.x);
+        PRINTF("y: %5d\n", (*m)->geom.y);
+        PRINTF("w: %5d\n", (*m)->geom.width);
+        PRINTF("h: %5d\n", (*m)->geom.height);
+
+        m = &(*m)->next;
     }
 
-    if (reply)
-        free(reply);
+    free(reply);
 
     return true;
 }
 
 void zaphod(void)
 {
-    /* FIXME init monitor struct */
-    int16_t x = 0;
-    int16_t y = 0;
-    uint16_t w = cfg.screen->width_in_pixels;
-    uint16_t h = cfg.screen->height_in_pixels;
+    if (!(cfg.monitors = calloc(1, sizeof(monitor_t))))
+        err("failed to allocate monitor\n");
 
-    PRINTF("x: %5d\n", x);
-    PRINTF("y: %5d\n", y);
-    PRINTF("w: %5d\n", w);
-    PRINTF("h: %5d\n", h);
+    cfg.monitors->geom.x = 0;
+    cfg.monitors->geom.y = 0;
+    cfg.monitors->geom.width  = cfg.screen->width_in_pixels;
+    cfg.monitors->geom.height = cfg.screen->height_in_pixels;
+
+    PRINTF("info for monitor: %d\n", 1);
+    PRINTF("x: %5d\n", cfg.monitors->geom.x);
+    PRINTF("y: %5d\n", cfg.monitors->geom.y);
+    PRINTF("w: %5d\n", cfg.monitors->geom.width);
+    PRINTF("h: %5d\n", cfg.monitors->geom.height);
+
 }
 
