@@ -9,19 +9,6 @@
 #define BUFLEN 256
 
 /**
- * A rectangle
- *
- * x - the position on the x axis
- * y - the position on the y axis
- * w - the width of the rectangle
- * h - the height of the rectangle
- */
-typedef struct {
-    int16_t x, y;
-    uint16_t w, h;
-} rectangle_t;
-
-/**
  * A client
  *
  * geom - the client geometry - x, y, width, height
@@ -35,7 +22,7 @@ typedef struct {
  * is_fullscrn - set if the client is fullscreen
  */
 typedef struct client_t {
-    rectangle_t geom;
+    xcb_rectangle_t geom;
     unsigned int tags;
     char name[BUFLEN];
     bool is_floating, is_urgent, is_fullscrn;
@@ -51,7 +38,7 @@ typedef struct client_t {
  * next - the next available monitor
  */
 typedef struct monitor_t {
-    rectangle_t geom;
+    xcb_rectangle_t geom;
     unsigned int tags;
     struct monitor_t *next;
 } monitor_t;
