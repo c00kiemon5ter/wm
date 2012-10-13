@@ -1,4 +1,3 @@
-
 #include "events.h"
 #include "global.h"
 #include "helpers.h"
