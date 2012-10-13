@@ -15,7 +15,7 @@
 #include "events.h"
 #include "messages.h"
 
-global_configuration_t cfg;
+global_configuration_t cfg = { 0, { 0 }, 0, 0, 0, 0, 0, 0, 0};
 
 /**
  * setup server connection
