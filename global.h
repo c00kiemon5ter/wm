@@ -6,6 +6,9 @@
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
 
+/* mask that defines the events the wm is notified of */
+#define ROOT_EVENT_MASK (XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY)
+
 /* length for small buffers */
 #define BUFLEN 256
 
