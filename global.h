@@ -1,6 +1,7 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
+#include <limits.h>
 #include <stdbool.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
@@ -17,15 +18,15 @@
  * win  - the window to manage
  * next - the next client
  *
- * is_floating - set if the client is floating
- * is_urgent   - set if the client has set an urgent hint
- * is_fullscrn - set if the client is fullscreen
+ * is_urgent    - set if the client has set an urgent hint
+ * is_floating  - set if the client is floating
+ * is_fullscrn  - set if the client is fullscreen
  */
 typedef struct client_t {
     xcb_rectangle_t geom;
     unsigned int tags;
     char name[BUFLEN];
-    bool is_floating, is_urgent, is_fullscrn;
+    bool is_urgent, is_floating, is_fullscrn;
     xcb_window_t win;
     struct client_t *next;
 } client_t;
@@ -44,39 +45,32 @@ typedef struct monitor_t {
 } monitor_t;
 
 /**
- * A tag
+ * global shared variables
  *
- * nbit - the position on the bitmask
- * name - the tag name/label
- * next - the next available tag
+ * running      - state of the window manager
+ * wm_name      - name of the window manager
+ * def_screen   - the screen number
+ * screen       - the screen struct
+ * conx         - the connection to the X server
+ * ewmh         - connection to manage ewmh
+ * tag_names    - array with tag names
+ * monitors     - list of available monitors
+ * clients      - list of all managed clients
+ * cur_client   - the current active and focused client
  */
-typedef struct tag_t {
-    unsigned int bit;
-    char name[BUFLEN];
-    struct tag_t *next;
-} tag_t;
-
-/* global shared variables */
-typedef struct {
-    /* state of the window manager */
+struct configuration {
     bool running;
-    /* name of the window manager */
     char wm_name[BUFLEN];
-    /* the screen number and struct */
-    int default_screen;
+    int def_screen;
     xcb_screen_t *screen;
-    /* the connection to the X server */
-    xcb_connection_t *connection;
-    /* connection to manage ewmh */
+    xcb_connection_t *conn;
     xcb_ewmh_connection_t *ewmh;
-    /* list of available monitors */
+    char tag_names[sizeof(unsigned int) * CHAR_BIT][BUFLEN];
     monitor_t *monitors;
-    /* list of all managed clients */
     client_t *clients;
-    /* the current active and focused client */
-    client_t *current_client;
-} global_configuration_t;
+    client_t *cur_client;
+};
 
-extern global_configuration_t cfg;
+extern struct configuration cfg;
 
 #endif
