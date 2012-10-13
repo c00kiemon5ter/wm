@@ -18,7 +18,7 @@ bool randr(void)
     xcb_randr_get_screen_resources_reply_t *reply = xcb_randr_get_screen_resources_reply(cfg.conn, cookie, (void *)0);
     xcb_randr_crtc_t *info = xcb_randr_get_screen_resources_crtcs(reply);
 
-    PRINTF("randr num crtcs: %zd\n", reply->num_crtcs);
+    PRINTF("randr num crtcs: %u\n", reply->num_crtcs);
 
     monitor_t **m = &cfg.monitors;
 
@@ -31,18 +31,18 @@ bool randr(void)
             continue;
 
         if (!(*m = calloc(1, sizeof(monitor_t))))
-            err("failed to allocate crtc: %d\n", crtc);
+            err("failed to allocate crtc: %u\n", crtc);
 
         (*m)->geom.x = reply->x;
         (*m)->geom.y = reply->y;
         (*m)->geom.width  = reply->width;
         (*m)->geom.height = reply->height;
 
-        PRINTF("info for crtc: %d\n", crtc);
+        PRINTF("info for crtc: %u\n", crtc);
         PRINTF("x: %5d\n", (*m)->geom.x);
         PRINTF("y: %5d\n", (*m)->geom.y);
-        PRINTF("w: %5d\n", (*m)->geom.width);
-        PRINTF("h: %5d\n", (*m)->geom.height);
+        PRINTF("w: %5u\n", (*m)->geom.width);
+        PRINTF("h: %5u\n", (*m)->geom.height);
 
         m = &(*m)->next;
 
@@ -60,8 +60,8 @@ bool randr(void)
         //     snprintf(name, MIN(name_len, sizeof(name)), "%s", xcb_randr_get_output_info_name(reply));
         //
         //     PRINTF("info for output: %d -- %s\n", output, name);
-        //     PRINTF("mm_width : %5d\n", reply->mm_width);
-        //     PRINTF("mm_height: %5d\n", reply->mm_height);
+        //     PRINTF("mm_width : %5u\n", reply->mm_width);
+        //     PRINTF("mm_height: %5u\n", reply->mm_height);
         //
         //     if (reply)
         //         free(reply);
@@ -111,8 +111,8 @@ bool xinerama(void)
         PRINTF("info for screen: %d\n", screen);
         PRINTF("x: %5d\n", (*m)->geom.x);
         PRINTF("y: %5d\n", (*m)->geom.y);
-        PRINTF("w: %5d\n", (*m)->geom.width);
-        PRINTF("h: %5d\n", (*m)->geom.height);
+        PRINTF("w: %5u\n", (*m)->geom.width);
+        PRINTF("h: %5u\n", (*m)->geom.height);
 
         m = &(*m)->next;
     }
@@ -135,8 +135,8 @@ void zaphod(void)
     PRINTF("info for monitor: %d\n", 1);
     PRINTF("x: %5d\n", cfg.monitors->geom.x);
     PRINTF("y: %5d\n", cfg.monitors->geom.y);
-    PRINTF("w: %5d\n", cfg.monitors->geom.width);
-    PRINTF("h: %5d\n", cfg.monitors->geom.height);
+    PRINTF("w: %5u\n", cfg.monitors->geom.width);
+    PRINTF("h: %5u\n", cfg.monitors->geom.height);
 
 }
 
