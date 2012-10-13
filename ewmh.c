@@ -10,7 +10,7 @@ void ewmh_init(void)
     if (!(cfg.ewmh = calloc(1, sizeof(xcb_ewmh_connection_t))))
         err("failed to allocate ewmh object\n");
 
-    xcb_intern_atom_cookie_t *ewmh_cookies = xcb_ewmh_init_atoms(cfg.connection, cfg.ewmh);
+    xcb_intern_atom_cookie_t *ewmh_cookies = xcb_ewmh_init_atoms(cfg.conn, cfg.ewmh);
     xcb_ewmh_init_atoms_replies(cfg.ewmh, ewmh_cookies, (void *)0);
 }
 
@@ -30,7 +30,7 @@ void ewmh_set_supported_atoms(void)
         cfg.ewmh->_NET_CLIENT_LIST,
         cfg.ewmh->_NET_ACTIVE_WINDOW,
     };
-    xcb_ewmh_set_supported(cfg.ewmh, cfg.default_screen, LENGTH(new_atoms), new_atoms);
+    xcb_ewmh_set_supported(cfg.ewmh, cfg.def_screen, LENGTH(new_atoms), new_atoms);
 }
 
 void ewmh_update_wm_name(const char *wm_name)
@@ -41,13 +41,13 @@ void ewmh_update_wm_name(const char *wm_name)
 
 void ewmh_update_active_window(const xcb_window_t win)
 {
-    xcb_ewmh_set_active_window(cfg.ewmh, cfg.default_screen, (win == 0) ? XCB_NONE : win);
+    xcb_ewmh_set_active_window(cfg.ewmh, cfg.def_screen, (win == 0) ? XCB_NONE : win);
 }
 
 /* FIXME */
 void ewmh_update_number_of_desktops(void)
 {
-//xcb_ewmh_set_number_of_desktops(ewmh, default_screen, num_desktops);
+//xcb_ewmh_set_number_of_desktops(ewmh, def_screen, num_desktops);
 }
 
 /* FIXME */
@@ -63,7 +63,7 @@ void ewmh_update_current_desktop(void)
    //     d = d->next;
    // }
 
-   // xcb_ewmh_set_current_desktop(ewmh, default_screen, cd);
+   // xcb_ewmh_set_current_desktop(ewmh, def_screen, cd);
 }
 
 /* FIXME */
@@ -90,14 +90,14 @@ void ewmh_update_desktop_names(void)
 
    // pos--;
 
-   // xcb_ewmh_set_desktop_names(ewmh, default_screen, pos, names);
+   // xcb_ewmh_set_desktop_names(ewmh, def_screen, pos, names);
 }
 
 /* FIXME */
 void ewmh_update_client_list(void)
 {
     // if (num_clients == 0) {
-    //     xcb_ewmh_set_client_list(ewmh, default_screen, 0, NULL);
+    //     xcb_ewmh_set_client_list(ewmh, def_screen, 0, NULL);
     //     return;
     // }
 
@@ -117,6 +117,6 @@ void ewmh_update_client_list(void)
     // if (i != num_clients)
     //     return;
 
-    // xcb_ewmh_set_client_list(ewmh, default_screen, num_clients, wins);
+    // xcb_ewmh_set_client_list(ewmh, def_screen, num_clients, wins);
 }
 

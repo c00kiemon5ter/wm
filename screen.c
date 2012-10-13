@@ -9,13 +9,13 @@
 
 bool randr(void)
 {
-    if (!xcb_get_extension_data(cfg.connection, &xcb_xinerama_id)->present) {
+    if (!xcb_get_extension_data(cfg.conn, &xcb_xinerama_id)->present) {
         warn("randr is not present\n");
         return false;
     }
 
-    xcb_randr_get_screen_resources_cookie_t cookie = xcb_randr_get_screen_resources(cfg.connection, cfg.screen->root);
-    xcb_randr_get_screen_resources_reply_t *reply = xcb_randr_get_screen_resources_reply(cfg.connection, cookie, (void *)0);
+    xcb_randr_get_screen_resources_cookie_t cookie = xcb_randr_get_screen_resources(cfg.conn, cfg.screen->root);
+    xcb_randr_get_screen_resources_reply_t *reply = xcb_randr_get_screen_resources_reply(cfg.conn, cookie, (void *)0);
     xcb_randr_crtc_t *info = xcb_randr_get_screen_resources_crtcs(reply);
 
     PRINTF("randr num crtcs: %zd\n", reply->num_crtcs);
@@ -23,8 +23,8 @@ bool randr(void)
     monitor_t **m = &cfg.monitors;
 
     for (uint16_t crtc = 0; crtc < reply->num_crtcs; crtc++) {
-        xcb_randr_get_crtc_info_cookie_t cookie = xcb_randr_get_crtc_info(cfg.connection, info[crtc], XCB_CURRENT_TIME);
-        xcb_randr_get_crtc_info_reply_t *reply = xcb_randr_get_crtc_info_reply(cfg.connection, cookie, (void *)0);
+        xcb_randr_get_crtc_info_cookie_t cookie = xcb_randr_get_crtc_info(cfg.conn, info[crtc], XCB_CURRENT_TIME);
+        xcb_randr_get_crtc_info_reply_t *reply = xcb_randr_get_crtc_info_reply(cfg.conn, cookie, (void *)0);
 
         /* if crtc not associated with any monitor, skip it */
         if (xcb_randr_get_crtc_info_outputs_length(reply) == 0)
@@ -52,8 +52,8 @@ bool randr(void)
         // PRINTF("outputs: %d\n", outputs);
         //
         // for (int output = 0; output < outputs; output++) {
-        //     xcb_randr_get_output_info_cookie_t cookie = xcb_randr_get_output_info(cfg.connection, info[output], XCB_CURRENT_TIME);
-        //     xcb_randr_get_output_info_reply_t *reply = xcb_randr_get_output_info_reply(cfg.connection, cookie, (void *)0);
+        //     xcb_randr_get_output_info_cookie_t cookie = xcb_randr_get_output_info(cfg.conn, info[output], XCB_CURRENT_TIME);
+        //     xcb_randr_get_output_info_reply_t *reply = xcb_randr_get_output_info_reply(cfg.conn, cookie, (void *)0);
         //
         //     size_t name_len = xcb_randr_get_output_info_name_length(reply) + 1;
         //     char name[BUFLEN];
@@ -79,8 +79,8 @@ bool xinerama(void)
 {
     bool is_active = false;
 
-    if (xcb_get_extension_data(cfg.connection, &xcb_xinerama_id)->present) {
-        xcb_xinerama_is_active_reply_t *reply = xcb_xinerama_is_active_reply(cfg.connection, xcb_xinerama_is_active(cfg.connection), (void *)0);
+    if (xcb_get_extension_data(cfg.conn, &xcb_xinerama_id)->present) {
+        xcb_xinerama_is_active_reply_t *reply = xcb_xinerama_is_active_reply(cfg.conn, xcb_xinerama_is_active(cfg.conn), (void *)0);
         is_active = reply->state;
         free(reply);
     }
@@ -90,8 +90,8 @@ bool xinerama(void)
         return false;
     }
 
-    xcb_xinerama_query_screens_cookie_t cookie = xcb_xinerama_query_screens_unchecked(cfg.connection);
-    xcb_xinerama_query_screens_reply_t *reply = xcb_xinerama_query_screens_reply(cfg.connection, cookie, (void *)0);
+    xcb_xinerama_query_screens_cookie_t cookie = xcb_xinerama_query_screens_unchecked(cfg.conn);
+    xcb_xinerama_query_screens_reply_t *reply = xcb_xinerama_query_screens_reply(cfg.conn, cookie, (void *)0);
     xcb_xinerama_screen_info_t *info = xcb_xinerama_query_screens_screen_info(reply);
     int screens = xcb_xinerama_query_screens_screen_info_length(reply);
 

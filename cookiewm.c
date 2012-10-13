@@ -15,7 +15,7 @@
 #include "events.h"
 #include "messages.h"
 
-global_configuration_t cfg = { 0, { 0 }, 0, 0, 0, 0, 0, 0, 0};
+struct configuration cfg = { 0, { 0 }, 0, 0, 0, 0, { { 0 } }, 0, 0, 0 };
 
 /**
  * setup server connection
@@ -25,13 +25,13 @@ global_configuration_t cfg = { 0, { 0 }, 0, 0, 0, 0, 0, 0, 0};
  */
 static void init_xcb(int *dpy_fd)
 {
-    cfg.connection = xcb_connect((void *)0, &cfg.default_screen);
-    if (xcb_connection_has_error(cfg.connection))
+    cfg.conn = xcb_connect((void *)0, &cfg.def_screen);
+    if (xcb_connection_has_error(cfg.conn))
         err("connection has errors\n");
-    *dpy_fd = xcb_get_file_descriptor(cfg.connection);
+    *dpy_fd = xcb_get_file_descriptor(cfg.conn);
 
-    xcb_screen_iterator_t iter = xcb_setup_roots_iterator(xcb_get_setup(cfg.connection));
-    for (int screen = 0; iter.rem && screen != cfg.default_screen; xcb_screen_next(&iter), screen++);
+    xcb_screen_iterator_t iter = xcb_setup_roots_iterator(xcb_get_setup(cfg.conn));
+    for (int screen = 0; iter.rem && screen != cfg.def_screen; xcb_screen_next(&iter), screen++);
     cfg.screen = iter.data;
 
     /* check for randr and xinerama extensions
@@ -50,10 +50,10 @@ static void init_xcb(int *dpy_fd)
      * can be only be set by one client.
      */
     uint32_t values[] = {ROOT_EVENT_MASK};
-    xcb_void_cookie_t cookie = xcb_change_window_attributes_checked(cfg.connection, cfg.screen->root, XCB_CW_EVENT_MASK, values);
-    xcb_generic_error_t *error = xcb_request_check(cfg.connection, cookie);
+    xcb_void_cookie_t cookie = xcb_change_window_attributes_checked(cfg.conn, cfg.screen->root, XCB_CW_EVENT_MASK, values);
+    xcb_generic_error_t *error = xcb_request_check(cfg.conn, cookie);
     if (error != (void *)0) {
-        xcb_disconnect(cfg.connection);
+        xcb_disconnect(cfg.conn);
         err("another window manager is already running\n");
     }
 
@@ -102,14 +102,14 @@ static void check_event(int dpy_fd, fd_set *fds)
 {
     if (FD_ISSET(dpy_fd, fds)) {
         xcb_generic_event_t *event = (void *)0;
-        while ((event = xcb_poll_for_event(cfg.connection))) {
+        while ((event = xcb_poll_for_event(cfg.conn))) {
             handle_event(event);
             if (event)
                 free(event);
         }
     }
 
-    if (xcb_connection_has_error(cfg.connection)) {
+    if (xcb_connection_has_error(cfg.conn)) {
         err("connection has errors\n");
     }
 }
@@ -185,8 +185,8 @@ int main(void)
     if (cfg.ewmh)
         free(cfg.ewmh);
 
-    xcb_flush(cfg.connection);
-    xcb_disconnect(cfg.connection);
+    xcb_flush(cfg.conn);
+    xcb_disconnect(cfg.conn);
 
     if (dpy_fd)
         close(dpy_fd);

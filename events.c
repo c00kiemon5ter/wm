@@ -48,7 +48,7 @@ void configure_request(xcb_generic_event_t *evt)
         values[i++] = e->stack_mode;
     }
 
-    xcb_configure_window(cfg.connection, e->window, mask, values);
+    xcb_configure_window(cfg.conn, e->window, mask, values);
 }
 
 void map_request(xcb_generic_event_t *evt)
@@ -58,16 +58,16 @@ void map_request(xcb_generic_event_t *evt)
     PRINTF("map request %X\n", e->window);
 
     xcb_get_window_attributes_reply_t *wa = NULL;
-    wa = xcb_get_window_attributes_reply(cfg.connection, xcb_get_window_attributes(cfg.connection, e->window), NULL);
+    wa = xcb_get_window_attributes_reply(cfg.conn, xcb_get_window_attributes(cfg.conn, e->window), NULL);
     if (wa && wa->override_redirect) {
         free(wa);
         return;
     }
 
-    xcb_map_window(cfg.connection, e->window);
+    xcb_map_window(cfg.conn, e->window);
 
     uint32_t values[] = {10, 10, 500, 500};
-    xcb_configure_window(cfg.connection, e->window,
+    xcb_configure_window(cfg.conn, e->window,
             XCB_CONFIG_WINDOW_X|XCB_CONFIG_WINDOW_Y|
             XCB_CONFIG_WINDOW_WIDTH|XCB_CONFIG_WINDOW_HEIGHT, values);
 }
@@ -122,6 +122,6 @@ void handle_event(xcb_generic_event_t *evt)
         case XCB_MOTION_NOTIFY:     motion_notify(evt);     break;
         default:                    /* not handled */       break;
     }
-    xcb_flush(cfg.connection);
+    xcb_flush(cfg.conn);
 }
 
