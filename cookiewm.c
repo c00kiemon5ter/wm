@@ -35,11 +35,18 @@ static void init_xcb(int *dpy_fd)
     cfg.screen = iter.data;
 
     /* check for randr and xinerama extensions
-     * if not available try the old dual head.
-     * will initialize monitor structs.
+     * or fallback to zaphod/dual head mode.
+     * initialize monitor structs and tags.
      */
     if (!randr() && !xinerama())
         zaphod();
+    for (monitor_t *m = cfg.monitors; m; m->tags = 0x1, m = m->next);
+    cfg.monitors->tags = 0xEC;
+
+    /* FIXME */
+    for (monitor_t *m = cfg.monitors; m; m = m->next) {
+        bitchars(m->tags);
+    }
 
     /* set the event mask for the root window
      * the event mask defines for which events

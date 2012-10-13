@@ -20,6 +20,17 @@
 #define PRINTF(fmt,...)     ((void)0)
 #endif
 
+#define BIT_SET(x,b)        ((x) |= (1 << (b)))
+#define BIT_FLIP(x,b)       ((x) ^= (1 << (b)))
+#define BIT_CLEAR(x,b)      ((x) &= (1 << (b)))
+#define BIT_CHECK(x,b)      ((x) &  (1 << (b)))
+
+#define BITMASK_SET(x,m)    ((x) |=   (m))
+#define BITMASK_FLIP(x,m)   ((x) ^=   (m))
+#define BITMASK_CLEAR(x,m)  ((x) &= (~(m)))
+#define BITMASK_CHECK(x,m)  ((x) &    (m))
+
+void bitchars(int value);
 void warn(char *, ...);
 __attribute__((noreturn))
 void err(char *, ...);
