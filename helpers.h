@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdint.h>
+#include <limits.h>
 
 #define XCB_CONFIG_WINDOW_X_Y_WIDTH_HEIGHT XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT
 #define XCB_CONFIG_WINDOW_X_Y XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y
@@ -30,7 +31,9 @@
 #define BITMASK_CLEAR(x,m)  ((x) &= (~(m)))
 #define BITMASK_CHECK(x,m)  ((x) &    (m))
 
-void bitchars(int value);
+#define BITS_BUF_SIZE        (CHAR_BIT * sizeof(uintmax_t) + 1)
+char *bitstr(uintmax_t, char [static BITS_BUF_SIZE]);
+
 void warn(char *, ...);
 __attribute__((noreturn))
 void err(char *, ...);

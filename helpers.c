@@ -1,22 +1,30 @@
 #include <stdlib.h>
 #include <string.h>
-#include <limits.h>
 
 #include <xcb/xcb.h>
 #include <xcb/xcb_event.h>
 
 #include "helpers.h"
 
-void bitchars(int value)
+char *bitstr(uintmax_t val, char bits[static BITS_BUF_SIZE])
 {
-    int size = (sizeof(value) * CHAR_BIT);
-    char bits[size + 1];
-    bits[size] = '\0';
+    static const int base = 2;
+    char *str = bits + BITS_BUF_SIZE;
 
-    for (int i = 0; i < size; i++)
-        bits[size - 1 - i] = (!!BIT_CHECK(value, i)) + '0';
+    PRINTF("dec: %zd\n", val);
+    PRINTF("hex: %jx\n", val);
 
-    PRINTF("dec: %5d :: hex: %#05x :: bin: %s\n", value, value, bits);
+    for (*--str = 0; val; val /= base)
+        *--str = '0' + val % base;
+    if (!*str)
+        *--str = '0';
+    for (char *i = bits; i != str; i++)
+        *i = '0';
+
+    PRINTF("bin: %s\n", str);
+    PRINTF("bit: %s\n", bits);
+
+    return str;
 }
 
 void warn(char *fmt, ...)
