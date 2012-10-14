@@ -27,6 +27,16 @@ char *bitstr(uintmax_t val, char bits[static BITS_BUF_SIZE])
     return str;
 }
 
+uintmax_t max(uintmax_t a, uintmax_t b)
+{
+    return (a > b) ? a : b;
+}
+
+uintmax_t min(uintmax_t a, uintmax_t b)
+{
+    return (a < b) ? a : b;
+}
+
 void warn(char *fmt, ...)
 {
     va_list ap;

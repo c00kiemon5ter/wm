@@ -151,7 +151,7 @@ static void check_message(int sock_fd, fd_set *fds)
 static void wait_event_or_message(int dpy_fd, int sock_fd)
 {
     fd_set fds = { { 0 } };
-    int sel = MAX(sock_fd, dpy_fd) + 1;
+    int sel = max(sock_fd, dpy_fd) + 1;
 
     while (cfg.running) {
         FD_ZERO(&fds);
