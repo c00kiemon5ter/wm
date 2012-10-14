@@ -41,7 +41,8 @@ static void init_xcb(int *dpy_fd)
     if (!randr() && !xinerama())
         zaphod();
     for (monitor_t *m = cfg.monitors; m; m->tags = 0x1, m = m->next);
-    /* FIXME init tag names ? */
+    for (size_t i = 0; i < LENGTH(cfg.tag_names); i++)
+        snprintf(cfg.tag_names[i], sizeof(cfg.tag_names[0]), "%zd", i);
 
     /* set the event mask for the root window
      * the event mask defines for which events
