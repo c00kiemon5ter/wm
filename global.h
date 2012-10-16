@@ -14,15 +14,28 @@
 #define BUF_NAME_LEN 256
 
 /**
+ * enumeration of tiling methods
+ */
+typedef enum {
+    VSTACK,
+    BSTACK,
+    GRID,
+    MAX,
+    FLOAT,
+} layout_t;
+
+/**
  * A monitor
  *
  * geom - the monitor geometry - x, y, width, height
  * tags - bitmask with set bits the active tags on the monitor
+ * mode - the layout for this monitor
  * next - the next available monitor
  */
 typedef struct monitor_t {
     xcb_rectangle_t geom;
     unsigned int tags;
+    layout_t mode;
     struct monitor_t *next;
 } monitor_t;
 

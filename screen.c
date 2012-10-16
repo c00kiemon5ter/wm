@@ -45,6 +45,10 @@ bool randr(void)
         (*m)->geom.width  = reply->width;
         (*m)->geom.height = reply->height;
 
+        BIT_SET((*m)->tags, 0);
+        (*m)->mode = BSTACK;
+        (*m)->next = (void *)0;
+
         PRINTF("info for crtc: %u\n", crtc);
         PRINTF("x: %5d\n", (*m)->geom.x);
         PRINTF("y: %5d\n", (*m)->geom.y);
