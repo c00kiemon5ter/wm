@@ -52,9 +52,9 @@ static void init_xcb(int *dpy_fd)
      * XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT
      * can be only be set by one client.
      */
-    uint32_t values[] = {ROOT_EVENT_MASK};
-    xcb_void_cookie_t cookie = xcb_change_window_attributes_checked(cfg.conn, cfg.screen->root, XCB_CW_EVENT_MASK, values);
-    xcb_generic_error_t *error = xcb_request_check(cfg.conn, cookie);
+    const uint32_t values[] = {ROOT_EVENT_MASK};
+    const xcb_void_cookie_t cookie = xcb_change_window_attributes_checked(cfg.conn, cfg.screen->root, XCB_CW_EVENT_MASK, values);
+    const xcb_generic_error_t *error = xcb_request_check(cfg.conn, cookie);
     if (error != (void *)0) {
         xcb_disconnect(cfg.conn);
         err("another window manager is already running\n");
@@ -101,7 +101,7 @@ static void init_socket(int *sock_fd)
  * check if a new event arrived
  * and handle the event
  */
-static void check_event(int dpy_fd, fd_set *fds)
+static void check_event(const int dpy_fd, const fd_set *fds)
 {
     if (FD_ISSET(dpy_fd, fds)) {
         xcb_generic_event_t *event = (void *)0;
@@ -121,13 +121,13 @@ static void check_event(int dpy_fd, fd_set *fds)
  * check if a new message arrived and
  * handle the message and the response
  */
-static void check_message(int sock_fd, fd_set *fds)
+static void check_message(const int sock_fd, const fd_set *fds)
 {
     char msg[BUFSIZ] = { 0 };
     char rsp[BUFSIZ] = { 0 };
 
     if (FD_ISSET(sock_fd, fds)) {
-        int ret_fd = accept(sock_fd, (void *)0, (void *)0);
+        const int ret_fd = accept(sock_fd, (void *)0, (void *)0);
         if (ret_fd == -1) {
             warn("failed to accept connection\n");
             return;
@@ -149,10 +149,10 @@ static void check_message(int sock_fd, fd_set *fds)
     }
 }
 
-static void wait_event_or_message(int dpy_fd, int sock_fd)
+static void wait_event_or_message(const int dpy_fd, const int sock_fd)
 {
     fd_set fds = { { 0 } };
-    int sel = max(sock_fd, dpy_fd) + 1;
+    const int sel = max(sock_fd, dpy_fd) + 1;
 
     while (cfg.running) {
         FD_ZERO(&fds);

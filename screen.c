@@ -14,16 +14,16 @@ bool randr(void)
         return false;
     }
 
-    xcb_randr_get_screen_resources_cookie_t cookie = xcb_randr_get_screen_resources(cfg.conn, cfg.screen->root);
+    const xcb_randr_get_screen_resources_cookie_t cookie = xcb_randr_get_screen_resources_unchecked(cfg.conn, cfg.screen->root);
     xcb_randr_get_screen_resources_reply_t *reply = xcb_randr_get_screen_resources_reply(cfg.conn, cookie, (void *)0);
-    xcb_randr_crtc_t *info = xcb_randr_get_screen_resources_crtcs(reply);
+    const xcb_randr_crtc_t *info = xcb_randr_get_screen_resources_crtcs(reply);
 
     PRINTF("randr num crtcs: %u\n", reply->num_crtcs);
 
     monitor_t **m = &cfg.monitors;
 
     for (uint16_t crtc = 0; crtc < reply->num_crtcs; crtc++) {
-        xcb_randr_get_crtc_info_cookie_t cookie = xcb_randr_get_crtc_info(cfg.conn, info[crtc], XCB_CURRENT_TIME);
+        const xcb_randr_get_crtc_info_cookie_t cookie = xcb_randr_get_crtc_info_unchecked(cfg.conn, info[crtc], XCB_CURRENT_TIME);
         xcb_randr_get_crtc_info_reply_t *reply = xcb_randr_get_crtc_info_reply(cfg.conn, cookie, (void *)0);
 
         /* if crtc not associated with any monitor, skip it */
@@ -52,7 +52,7 @@ bool randr(void)
         // PRINTF("outputs: %d\n", outputs);
         //
         // for (int output = 0; output < outputs; output++) {
-        //     xcb_randr_get_output_info_cookie_t cookie = xcb_randr_get_output_info(cfg.conn, info[output], XCB_CURRENT_TIME);
+        //     const xcb_randr_get_output_info_cookie_t cookie = xcb_randr_get_output_info_unchecked(cfg.conn, info[output], XCB_CURRENT_TIME);
         //     xcb_randr_get_output_info_reply_t *reply = xcb_randr_get_output_info_reply(cfg.conn, cookie, (void *)0);
         //
         //     size_t name_len = xcb_randr_get_output_info_name_length(reply) + 1;
@@ -90,9 +90,9 @@ bool xinerama(void)
         return false;
     }
 
-    xcb_xinerama_query_screens_cookie_t cookie = xcb_xinerama_query_screens_unchecked(cfg.conn);
+    const xcb_xinerama_query_screens_cookie_t cookie = xcb_xinerama_query_screens_unchecked(cfg.conn);
     xcb_xinerama_query_screens_reply_t *reply = xcb_xinerama_query_screens_reply(cfg.conn, cookie, (void *)0);
-    xcb_xinerama_screen_info_t *info = xcb_xinerama_query_screens_screen_info(reply);
+    const xcb_xinerama_screen_info_t *info = xcb_xinerama_query_screens_screen_info(reply);
     int screens = xcb_xinerama_query_screens_screen_info_length(reply);
 
     PRINTF("xinerama screens: %d\n", screens);
