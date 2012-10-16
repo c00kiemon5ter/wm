@@ -40,9 +40,6 @@ static void init_xcb(int *dpy_fd)
      */
     if (!randr() && !xinerama())
         zaphod();
-    for (monitor_t *m = cfg.monitors; m; m->tags = 0x1, m = m->next);
-    for (size_t i = 0; i < LENGTH(cfg.tag_names); i++)
-        snprintf(cfg.tag_names[i], sizeof(cfg.tag_names[0]), "%zd", i);
 
     /* set the event mask for the root window
      * the event mask defines for which events
@@ -95,6 +92,18 @@ static void init_socket(int *sock_fd)
     if (listen(*sock_fd, SOMAXCONN) == -1)
         err("failed to listen for connections\n");
 
+}
+
+/**
+ * initialize wm structs
+ */
+void init_wm(void)
+{
+    cfg.cur_mon = cfg.monitors;
+    for (monitor_t *m = cfg.monitors; m; m = m->next)
+        BIT_SET(m->tags, 0);
+    for (size_t i = 0; i < LENGTH(cfg.tag_names); i++)
+        snprintf(cfg.tag_names[i], sizeof(cfg.tag_names[0]), "%zd", i);
 }
 
 /**
@@ -179,6 +188,7 @@ int main(void)
     /* initialization */
     init_xcb(&dpy_fd);
     init_socket(&sock_fd);
+    init_wm();
 
     /* main loop */
     wait_event_or_message(dpy_fd, sock_fd);
