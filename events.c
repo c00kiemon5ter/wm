@@ -76,19 +76,15 @@ void map_request(xcb_generic_event_t *evt)
     PRINTF("client w   : %u\n", c->geom.width);
     PRINTF("client h   : %u\n", c->geom.height);
 
-    //apply_rules(c);
+    /* FIXME apply_rules(c); */
     add_client(c);
 
     xcb_map_window(cfg.conn, e->window);
 
     /* move to center of 1st monitor */
-    uint32_t values[] = { c->mon->geom.x + (c->mon->geom.width - c->geom.width) / 2,
-                          c->mon->geom.y + (c->mon->geom.height - c->geom.height) / 2};
-    xcb_configure_window(cfg.conn, e->window, XCB_CONFIG_WINDOW_X_Y, values);
+    window_move(e->window, c->mon->geom.x + (c->mon->geom.width  - c->geom.width)  / 2,
+                           c->mon->geom.y + (c->mon->geom.height - c->geom.height) / 2);
     window_update_geom(c->win, &c->geom);
-    PRINTF("client x : %u\n", c->geom.x);
-    PRINTF("client y : %u\n", c->geom.y);
-    PRINTF("client w : %u\n", c->geom.width);
 }
 
 void client_message(xcb_generic_event_t *evt)
