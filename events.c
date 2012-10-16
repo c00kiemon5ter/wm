@@ -5,6 +5,7 @@
 #include "helpers.h"
 #include "window.h"
 #include "ewmh.h"
+#include "tile.h"
 
 void configure_request(xcb_generic_event_t *evt)
 {
@@ -81,12 +82,15 @@ void map_request(xcb_generic_event_t *evt)
     /* FIXME apply_rules(c); */
     add_client(c);
 
-    xcb_map_window(cfg.conn, e->window);
-
     /* move to center of 1st monitor */
     window_move(e->window, c->mon->geom.x + (c->mon->geom.width  - c->geom.width)  / 2,
                            c->mon->geom.y + (c->mon->geom.height - c->geom.height) / 2);
     window_update_geom(c->win, &c->geom);
+
+    if (BITMASK_CHECK(c->mon->tags, c->tags)) {
+        tile(c->mon, c->mon->mode);
+        window_show(c->win);
+    }
 }
 
 void client_message(xcb_generic_event_t *evt)

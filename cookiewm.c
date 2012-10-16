@@ -100,8 +100,6 @@ static void init_socket(int *sock_fd)
 void init_wm(void)
 {
     cfg.cur_mon = cfg.monitors;
-    for (monitor_t *m = cfg.monitors; m; m = m->next)
-        BIT_SET(m->tags, 0);
     for (size_t i = 0; i < LENGTH(cfg.tag_names); i++)
         snprintf(cfg.tag_names[i], sizeof(cfg.tag_names[0]), "%zd", i);
 }
