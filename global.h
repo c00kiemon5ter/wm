@@ -11,7 +11,7 @@
 #define ROOT_EVENT_MASK (XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY)
 
 /* length for small buffers */
-#define BUFLEN 256
+#define BUF_NAME_LEN 256
 
 /**
  * A monitor
@@ -43,7 +43,7 @@ typedef struct monitor_t {
 typedef struct client_t {
     xcb_rectangle_t geom;
     unsigned int tags;
-    char name[BUFLEN];
+    char name[BUF_NAME_LEN];
     bool is_urgent, is_floating, is_fullscrn;
     xcb_window_t win;
     struct client_t *next;
@@ -70,7 +70,7 @@ struct configuration {
     xcb_screen_t *screen;
     xcb_connection_t *conn;
     xcb_ewmh_connection_t *ewmh;
-    char tag_names[sizeof(unsigned int) * CHAR_BIT][BUFLEN];
+    char tag_names[sizeof(unsigned int) * CHAR_BIT][BUF_NAME_LEN];
     monitor_t *monitors;
     client_t *clients;
     client_t *cur_client;

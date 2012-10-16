@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <string.h>
 
 #include "ewmh.h"
@@ -33,89 +32,53 @@ void ewmh_set_supported_atoms(void)
     xcb_ewmh_set_supported(cfg.ewmh, cfg.def_screen, LENGTH(new_atoms), new_atoms);
 }
 
-void ewmh_update_wm_name(const char *wm_name)
-{
-    xcb_ewmh_set_wm_name(cfg.ewmh, cfg.screen->root, strlen(wm_name), wm_name);
-}
-
-void ewmh_update_active_window(const xcb_window_t win)
+inline void ewmh_update_active_window(const xcb_window_t win)
 {
     xcb_ewmh_set_active_window(cfg.ewmh, cfg.def_screen, (win == 0) ? XCB_NONE : win);
 }
 
-/* FIXME */
-void ewmh_update_number_of_desktops(void)
+inline void ewmh_update_wm_name(const char *wm_name)
 {
-//xcb_ewmh_set_number_of_desktops(ewmh, def_screen, num_desktops);
+    xcb_ewmh_set_wm_name(cfg.ewmh, cfg.screen->root, strlen(wm_name), wm_name);
 }
 
-/* FIXME */
-void ewmh_update_current_desktop(void)
+bool ewmh_get_window_name(const xcb_window_t win, char *name)
 {
-   // desktop_t *d = desk_head;
-   // unsigned int i = 0, cd = 0;
+    const xcb_get_property_cookie_t cookie = xcb_ewmh_get_wm_name_unchecked(cfg.ewmh, win);
+    xcb_ewmh_get_utf8_strings_reply_t data;
 
-   // while (d != NULL && i < num_desktops) {
-   //     if (desk == d)
-   //         cd = i;
-   //     i++;
-   //     d = d->next;
-   // }
+    if (!xcb_ewmh_get_wm_name_reply(cfg.ewmh, cookie, &data, (void *)0))
+        return false;
 
-   // xcb_ewmh_set_current_desktop(ewmh, def_screen, cd);
+    size_t len = min(sizeof(name), data.strings_len + 1);
+    memcpy(name, data.strings, len);
+    name[len] = 0;
+
+    PRINTF("Title strlen: %u\n", data.strings_len);
+    PRINTF("Title string: %s\n", data.strings);
+    PRINTF("Title name  : %s\n", name);
+
+    xcb_ewmh_get_utf8_strings_reply_wipe(&data);
+
+    return true;
 }
 
-/* FIXME */
-void ewmh_update_desktop_names(void)
+bool ewmh_wm_state_fullscreen(const xcb_window_t win)
 {
-   // char names[MAXLEN];
-   // desktop_t *d = desk_head;
-   // unsigned int pos, i;
+    bool state = false;
 
-   // pos = i = 0;
+    const xcb_get_property_cookie_t cookie = xcb_ewmh_get_wm_state_unchecked(cfg.ewmh, win);
+    xcb_ewmh_get_atoms_reply_t data;
 
-   // while (d != NULL && i < num_desktops) {
-   //     for (unsigned int j = 0; j < strlen(d->name); j++)
-   //         names[pos + j] = d->name[j];
-   //     pos += strlen(d->name);
-   //     names[pos] = '\0';
-   //     pos++;
-   //     d = d->next;
-   //     i++;
-   // }
+    if (!xcb_ewmh_get_wm_state_reply(cfg.ewmh, cookie, &data, (void *)0))
+        return state;
 
-   // if (i != num_desktops)
-   //     return;
+    for (unsigned int i = 0; i < data.atoms_len; i++)
+        if ((state = data.atoms[i] == cfg.ewmh->_NET_WM_STATE_FULLSCREEN))
+            break;
 
-   // pos--;
+    xcb_ewmh_get_atoms_reply_wipe(&data);
 
-   // xcb_ewmh_set_desktop_names(ewmh, def_screen, pos, names);
-}
-
-/* FIXME */
-void ewmh_update_client_list(void)
-{
-    // if (num_clients == 0) {
-    //     xcb_ewmh_set_client_list(ewmh, def_screen, 0, NULL);
-    //     return;
-    // }
-
-    // xcb_window_t wins[num_clients];
-    // desktop_t *d = desk_head;
-    // unsigned int i = 0;
-
-    // while (d != NULL && i < num_clients) {
-    //     node_t *n = first_extrema(d->root);
-    //     while (n != NULL) {
-    //         wins[i++] = n->client->window;
-    //         n = next_leaf(n);
-    //     }
-    //     d = d->next;
-    // }
-
-    // if (i != num_clients)
-    //     return;
-
-    // xcb_ewmh_set_client_list(ewmh, def_screen, num_clients, wins);
+    return state;
 }
 

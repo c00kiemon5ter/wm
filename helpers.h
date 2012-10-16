@@ -10,7 +10,7 @@
 #define XCB_CONFIG_WINDOW_X_Y_WIDTH_HEIGHT XCB_CONFIG_WINDOW_X_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT
 
 #define LENGTH(x)           (sizeof(x) / sizeof(*x))
-#define BOOLSTR(x)          ("false\0true" + 6 * x)
+#define BOOLSTR(x)          ("false\0true" + 6*x)
 
 #ifdef DEBUG
 #define PRINTF(fmt,...)     printf(":: %5d:%15.15s: " fmt, __LINE__, __FUNCTION__, __VA_ARGS__)
@@ -28,11 +28,11 @@
 #define BITMASK_CLEAR(x,m)  ((x) &= (~(m)))
 #define BITMASK_CHECK(x,m)  ((x) &    (m))
 
-#define BITS_BUF_SIZE        (CHAR_BIT * sizeof(uintmax_t) + 1)
-char *bitstr(uintmax_t, char [static BITS_BUF_SIZE]);
+#define BUF_BITS_SIZE        (CHAR_BIT * sizeof(uintmax_t) + 1)
+char *bitstr(uintmax_t, char [static BUF_BITS_SIZE]);
 
-inline uintmax_t max(uintmax_t, uintmax_t);
-inline uintmax_t min(uintmax_t, uintmax_t);
+uintmax_t max(uintmax_t, uintmax_t);
+uintmax_t min(uintmax_t, uintmax_t);
 
 void warn(char *, ...);
 __attribute__((noreturn)) void err(char *, ...);

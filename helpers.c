@@ -6,10 +6,10 @@
 
 #include "helpers.h"
 
-char *bitstr(uintmax_t val, char bits[static BITS_BUF_SIZE])
+char *bitstr(uintmax_t val, char bits[static BUF_BITS_SIZE])
 {
     static const int base = 2;
-    char *str = bits + BITS_BUF_SIZE;
+    char *str = bits + BUF_BITS_SIZE;
 
     PRINTF("dec: %zd\n", val);
     PRINTF("hex: %jx\n", val);
@@ -27,12 +27,12 @@ char *bitstr(uintmax_t val, char bits[static BITS_BUF_SIZE])
     return str;
 }
 
-uintmax_t max(uintmax_t a, uintmax_t b)
+inline uintmax_t max(uintmax_t a, uintmax_t b)
 {
     return (a > b) ? a : b;
 }
 
-uintmax_t min(uintmax_t a, uintmax_t b)
+inline uintmax_t min(uintmax_t a, uintmax_t b)
 {
     return (a < b) ? a : b;
 }

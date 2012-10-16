@@ -1,38 +1,34 @@
+#include <string.h>
 #include <stdbool.h>
 
 #include "window.h"
 #include "helpers.h"
+#include "ewmh.h"
+#include "icccm.h"
 
-bool window_is_transient(xcb_window_t win)
+bool window_update_geom(xcb_window_t win, xcb_rectangle_t *geom)
 {
-    return false;
-}
+    const xcb_get_geometry_cookie_t cookie = xcb_get_geometry(cfg.conn, win);
+    xcb_get_geometry_reply_t *reply = xcb_get_geometry_reply(cfg.conn, cookie, (void *)0);
 
-bool window_is_fullscreen(xcb_window_t win)
-{
-    return false;
-}
+    if (!reply)
+        return false;
 
-char *window_name(xcb_window_t win)
-{
-    // xcb_get_property_cookie_t cookie = xcb_ewmh_get_wm_name_unchecked(cfg.ewmh, win);
+    geom->x = reply->x;
+    geom->y = reply->y;
+    geom->width = reply->width;
+    geom->height = reply->height;
 
-    // xcb_ewmh_get_utf8_strings_reply_t *data = NULL;
-    // xcb_ewmh_get_wm_name_reply(cfg.ewmh, cookie, data, (void *)0);
+    free(reply);
 
-    // xcb_get_property_reply_t *reply = NULL;
-
-    // if (!data)
-    //     err("data is NULL\n", "");
-    // return data->strings;
-    return NULL;
+    return true;
 }
 
 client_t *create_client(xcb_window_t win)
 {
     PRINTF("creating client for window: %u\n", win);
 
-    client_t *c = NULL;
+    client_t *c = (void *)0;
 
     if (!(c = calloc(1, sizeof(client_t))))
         return false;
@@ -41,17 +37,15 @@ client_t *create_client(xcb_window_t win)
     c->mon = cfg.cur_mon;
     c->tags = cfg.cur_mon->tags;
 
-    c->is_fullscrn = window_is_fullscreen(win);
-    c->is_floating = window_is_transient(win);
+    c->is_fullscrn = ewmh_wm_state_fullscreen(win);
+    c->is_floating = icccm_is_transient(win);
     c->is_urgent = false;
 
-    /* FIXME get window attributs */
-    c->geom = (const xcb_rectangle_t){ .x = 0, .y = 0, .width = 200, .height = 100 };
-    /* FIXME get window name */
-    char *name = window_name(win);
-    if (!name)
-        name = NO_NAME;
-    snprintf(c->name, sizeof(c->name), "%s", name);
+    window_update_geom(win, &c->geom);
+
+    if (!ewmh_get_window_name(win, c->name) &&
+        !icccm_get_window_name(win, c->name))
+        snprintf(c->name, sizeof(c->name), "%s", NO_NAME);
 
     c->next = (void *)0;
 
@@ -80,7 +74,8 @@ client_t *locate(xcb_window_t win)
             PRINTF("found client for window: %u\n", win);
             return *c;
         }
+
     PRINTF("no client for window: %u\n", win);
-    return NULL;
+    return (void *)0;
 }
 

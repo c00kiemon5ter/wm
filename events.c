@@ -60,27 +60,41 @@ void map_request(xcb_generic_event_t *evt)
     if (locate(e->window))
         return;
 
-    client_t *c = NULL;
+    client_t *c = (void *)0;
     if (!(c = create_client(e->window)))
         err("failed to allocate client for window: %u\n", e->window);
 
+    char bits[BUF_BITS_SIZE];
     PRINTF("client name: %s\n", c->name);
+    PRINTF("client win : %u\n", c->win);
+    PRINTF("client tags: %s\n", bitstr(c->tags, bits));
+    PRINTF("client tran: %s\n", BOOLSTR(c->is_floating));
+    PRINTF("client full: %s\n", BOOLSTR(c->is_fullscrn));
+    PRINTF("client x   : %u\n", c->geom.x);
+    PRINTF("client y   : %u\n", c->geom.y);
+    PRINTF("client w   : %u\n", c->geom.width);
+    PRINTF("client h   : %u\n", c->geom.height);
 
     add_client(c);
 
-    xcb_get_window_attributes_reply_t *wa = NULL;
-    wa = xcb_get_window_attributes_reply(cfg.conn, xcb_get_window_attributes(cfg.conn, e->window), NULL);
-    if (wa && wa->override_redirect) {
-        free(wa);
+    xcb_get_window_attributes_reply_t *wa = (void *)0;
+    if (!(wa = xcb_get_window_attributes_reply(cfg.conn, xcb_get_window_attributes(cfg.conn, e->window), (void *)0)))
         return;
-    }
+
+    bool ignore = wa->override_redirect;
+    free(wa);
+    if (ignore)
+        return;
 
     xcb_map_window(cfg.conn, e->window);
 
-    uint32_t values[] = {10, 10, 500, 500};
-    xcb_configure_window(cfg.conn, e->window,
-            XCB_CONFIG_WINDOW_X|XCB_CONFIG_WINDOW_Y|
-            XCB_CONFIG_WINDOW_WIDTH|XCB_CONFIG_WINDOW_HEIGHT, values);
+    uint32_t values[] = { c->mon->geom.x + (c->mon->geom.width - c->geom.width) / 2,
+                          c->mon->geom.y + (c->mon->geom.height - c->geom.height) / 2};
+    xcb_configure_window(cfg.conn, e->window, XCB_CONFIG_WINDOW_X_Y, values);
+    window_update_geom(c->win, &c->geom);
+    PRINTF("client x : %u\n", c->geom.x);
+    PRINTF("client y : %u\n", c->geom.y);
+    PRINTF("client w : %u\n", c->geom.width);
 }
 
 void client_message(xcb_generic_event_t *evt)

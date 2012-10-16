@@ -63,8 +63,7 @@ bool randr(void)
         //     PRINTF("mm_width : %5u\n", reply->mm_width);
         //     PRINTF("mm_height: %5u\n", reply->mm_height);
         //
-        //     if (reply)
-        //         free(reply);
+        //     free(reply);
         // }
 
         free(reply);
