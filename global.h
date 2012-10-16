@@ -14,13 +14,27 @@
 #define BUFLEN 256
 
 /**
+ * A monitor
+ *
+ * geom - the monitor geometry - x, y, width, height
+ * tags - bitmask with set bits the active tags on the monitor
+ * next - the next available monitor
+ */
+typedef struct monitor_t {
+    xcb_rectangle_t geom;
+    unsigned int tags;
+    struct monitor_t *next;
+} monitor_t;
+
+/**
  * A client
  *
  * geom - the client geometry - x, y, width, height
  * tags - a bitmask with set bits the tags
  * name - the name of the window
- * win  - the window to manage
  * next - the next client
+ * win  - the window to manage
+ * mon  - the monitor to which the window belongs
  *
  * is_urgent    - set if the client has set an urgent hint
  * is_floating  - set if the client is floating
@@ -33,20 +47,8 @@ typedef struct client_t {
     bool is_urgent, is_floating, is_fullscrn;
     xcb_window_t win;
     struct client_t *next;
+    monitor_t *mon;
 } client_t;
-
-/**
- * A monitor
- *
- * geom - the monitor geometry - x, y, width, height
- * tags - bitmask with set bits the active tags on the monitor
- * next - the next available monitor
- */
-typedef struct monitor_t {
-    xcb_rectangle_t geom;
-    unsigned int tags;
-    struct monitor_t *next;
-} monitor_t;
 
 /**
  * global shared variables
@@ -73,6 +75,7 @@ struct configuration {
     monitor_t *monitors;
     client_t *clients;
     client_t *cur_client;
+    monitor_t *cur_mon;
 };
 
 extern struct configuration cfg;
