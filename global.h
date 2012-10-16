@@ -20,7 +20,7 @@ typedef enum {
     VSTACK,
     HSTACK,
     GRID,
-    MAX,
+    MONOCLE,
     FLOAT,
 } layout_t;
 

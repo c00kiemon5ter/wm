@@ -4,6 +4,14 @@
 #include "helpers.h"
 #include "window.h"
 
+/**
+ * Max layout - all windows fullscreen
+ * +--------+
+ * |        |
+ * | M A X  |
+ * |        |
+ * +--------+
+ */
 void monocle(const monitor_t *mon, unsigned int wins)
 {
     for (client_t *c = cfg.clients; c && wins; c = c->next)
@@ -13,57 +21,78 @@ void monocle(const monitor_t *mon, unsigned int wins)
         }
 }
 
+/**
+ * Grid layout
+ *
+ * +--------+
+ * |  |  |  |
+ * +--+--+--+
+ * |  |  |  |
+ * +--------+
+ */
 void grid(const monitor_t *mon, unsigned int wins)
 {
-    const int n = wins;
-    int cols = 0, col_num = 0, row_num = 0, i = -1;
+    const unsigned int n = wins;
+    unsigned int cols = 0, rows = 0;
+    unsigned int ncol = 0, nrow = 0;
 
+    /* calculate number of columns and rows - emulate square root */
     for (cols = 0; cols <= n/2; cols++)
         if (cols*cols >= n)
             break;
-
     if (n == 5)
         cols = 2;
+    rows = n/cols;
 
-    int rows = n/cols;
-    uint16_t client_width  = mon->geom.width / (cols ? cols : 1);
-    uint16_t client_height = mon->geom.height;
+    unsigned int i = 0;
 
-    for (client_t *c = cfg.clients; c && wins; c = c->next)
+    const uint16_t client_width  = mon->geom.width / (cols ? cols : 1);
+    const uint16_t client_height = mon->geom.height;
+
+    for (client_t *c = cfg.clients; c && i < wins; c = c->next)
         if (!c->is_floating && !c->is_fullscrn && BITMASK_CHECK(mon->tags, c->tags)) {
-            ++i;
-            if (i/rows + 1 > cols - n%cols)
+            if (i++/rows + 1 > cols - n%cols)
                 rows = n/cols + 1;
-            client_set_geom(c, mon->geom.x + col_num*client_width,
-                               mon->geom.y + row_num*client_height/rows,
-                               client_width, client_height/rows);
-            if (++row_num >= rows) {
-                row_num = 0;
-                col_num++;
+
+            client_set_geom(c, mon->geom.x + client_width  * ncol,
+                               mon->geom.y + client_height * nrow / rows,
+                               client_width, client_height / rows);
+
+            /* all rows filled - reset row count and go to next column */
+            if (++nrow >= rows) {
+                nrow = 0;
+                ncol++;
             }
-            --wins;
         }
 }
 
+/**
+ * vertical stack - the common tiling mode
+ * +--------+
+ * |    |   |
+ * |    +---|
+ * |    |   |
+ * +--------+
+ */
 void vstack(const monitor_t *mon, unsigned int wins)
 {
     client_t *c = cfg.clients;
-    uint16_t m_area = mon->geom.width * 0.6;
+    const uint16_t m_area = mon->geom.width * 0.6;
 
-    for (; c && wins; c = c->next)
-        if (!c->is_floating && !c->is_fullscrn && BITMASK_CHECK(mon->tags, c->tags)) {
-            client_set_geom(c, mon->geom.x, mon->geom.y, m_area, mon->geom.height);
-            --wins;
-            break;
-        }
+    /* look for the first window */
+    while (c && (c->is_floating || c->is_fullscrn || !BITMASK_CHECK(mon->tags, c->tags)))
+        c = c->next;
 
-    if (!c)
-        return;
+    /* place the first window in the master area */
+    client_set_geom(c, mon->geom.x, mon->geom.y, m_area, mon->geom.height);
+    --wins;
 
     const int16_t client_x = mon->geom.x + m_area;
     int16_t client_y = mon->geom.y;
     const uint16_t client_w = mon->geom.width - m_area;
     const uint16_t client_h = mon->geom.height / wins;
+
+    /* all other windows go to the stack */
     for (c = c->next; c && wins; c = c->next)
         if (!c->is_floating && !c->is_fullscrn && BITMASK_CHECK(mon->tags, c->tags)) {
             client_set_geom(c, client_x, client_y, client_w, client_h);
@@ -72,25 +101,33 @@ void vstack(const monitor_t *mon, unsigned int wins)
         }
 }
 
+/**
+ * horizontal stack - bottom stack
+ * +--------+
+ * |        |
+ * |--+--+--|
+ * |  |  |  |
+ * +--------+
+ */
 void hstack(const monitor_t *mon, unsigned int wins)
 {
     client_t *c = cfg.clients;
-    uint16_t m_area = mon->geom.height * 0.6;
+    const uint16_t m_area = mon->geom.height * 0.6;
 
-    for (; c && wins; c = c->next)
-        if (!c->is_floating && !c->is_fullscrn && BITMASK_CHECK(mon->tags, c->tags)) {
-            client_set_geom(c, mon->geom.x, mon->geom.y, mon->geom.width, m_area);
-            --wins;
-            break;
-        }
+    /* look for the first window */
+    while (c && (c->is_floating || c->is_fullscrn || !BITMASK_CHECK(mon->tags, c->tags)))
+        c = c->next;
 
-    if (!c)
-        return;
+    /* place the first window in the master area */
+    client_set_geom(c, mon->geom.x, mon->geom.y, mon->geom.width, m_area);
+    --wins;
 
     int16_t client_x = mon->geom.x;
     const int16_t client_y = mon->geom.y + m_area;
     const uint16_t client_w = mon->geom.width / wins;
     const uint16_t client_h = mon->geom.height - m_area;
+
+    /* all other windows go to the stack */
     for (c = c->next; c && wins; c = c->next)
         if (!c->is_floating && !c->is_fullscrn && BITMASK_CHECK(mon->tags, c->tags)) {
             client_set_geom(c, client_x, client_y, client_w, client_h);
@@ -99,6 +136,9 @@ void hstack(const monitor_t *mon, unsigned int wins)
         }
 }
 
+/**
+ * tile the given monitor with the given layout
+ */
 void tile(const monitor_t *mon, layout_t layout)
 {
     unsigned int num_windows = 0;
@@ -119,7 +159,7 @@ void tile(const monitor_t *mon, layout_t layout)
         case VSTACK:    vstack(mon, num_windows);   break;
         case HSTACK:    hstack(mon, num_windows);   break;
         case GRID:      grid(mon, num_windows);     break;
-        case MAX:       monocle(mon, num_windows);  break;
+        case MONOCLE:   monocle(mon, num_windows);  break;
         case FLOAT:     /* do not handle */         break;
         default: PRINTF("unknown layout: %d\n", layout); break;
     }
