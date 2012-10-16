@@ -5,7 +5,7 @@ CL_NAME = "cookie"
 
 CC      = cc
 LIBS    = -lxcb -lxcb-icccm -lxcb-ewmh -lxcb-xinerama -lxcb-randr
-CFLAGS  = -std=c99 -pedantic -Wall -Wextra -DWM_NAME=\"$(WM_NAME)\" -DVERSION=\"$(VERSION)\" -Wno-string-plus-int
+CFLAGS  = -std=c99 -pedantic -Wall -Wextra -DWM_NAME=\"$(WM_NAME)\" -DVERSION=\"$(VERSION)\"
 LDFLAGS = $(LIBS)
 
 PREFIX   ?= /usr/local

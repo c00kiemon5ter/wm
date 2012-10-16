@@ -10,7 +10,7 @@
 #define XCB_CONFIG_WINDOW_X_Y_WIDTH_HEIGHT XCB_CONFIG_WINDOW_X_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT
 
 #define LENGTH(x)           (sizeof(x) / sizeof(*x))
-#define BOOLSTR(x)          ("false\0true" + 6*x)
+#define BOOLSTR(x)          &("false\0true"[6*x])
 
 #ifdef DEBUG
 #define PRINTF(fmt,...)     printf(":: %5d:%15.15s: " fmt, __LINE__, __FUNCTION__, __VA_ARGS__)
