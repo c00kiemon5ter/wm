@@ -6,6 +6,23 @@
 #include "ewmh.h"
 #include "icccm.h"
 
+bool window_override_redirect(xcb_window_t win)
+{
+    bool state = false;
+
+    const xcb_get_window_attributes_cookie_t cookie = xcb_get_window_attributes(cfg.conn, win);
+    xcb_get_window_attributes_reply_t *reply = xcb_get_window_attributes_reply(cfg.conn, cookie, (void *)0);
+
+    if (!reply)
+        return state;
+
+    state = reply->override_redirect;
+
+    free(reply);
+
+    return state;
+}
+
 bool window_update_geom(xcb_window_t win, xcb_rectangle_t *geom)
 {
     const xcb_get_geometry_cookie_t cookie = xcb_get_geometry(cfg.conn, win);
@@ -38,7 +55,7 @@ client_t *create_client(xcb_window_t win)
     c->tags = cfg.cur_mon->tags;
 
     c->is_fullscrn = ewmh_wm_state_fullscreen(win);
-    c->is_floating = icccm_is_transient(win);
+    c->is_floating = icccm_is_transient(win) || ewmh_wm_type_dialog(win);
     c->is_urgent = false;
 
     window_update_geom(win, &c->geom);

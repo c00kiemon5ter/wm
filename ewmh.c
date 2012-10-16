@@ -82,3 +82,43 @@ bool ewmh_wm_state_fullscreen(const xcb_window_t win)
     return state;
 }
 
+bool ewmh_wm_type_dialog(const xcb_window_t win)
+{
+    bool state = false;
+
+    const xcb_get_property_cookie_t cookie = xcb_ewmh_get_wm_window_type_unchecked(cfg.ewmh, win);
+    xcb_ewmh_get_atoms_reply_t data;
+
+    if (!xcb_ewmh_get_wm_window_type_reply(cfg.ewmh, cookie, &data, (void *)0))
+        return state;
+
+    for (unsigned int i = 0; i < data.atoms_len; i++)
+        if ((state = data.atoms[i] == cfg.ewmh->_NET_WM_WINDOW_TYPE_DIALOG))
+            break;
+
+    xcb_ewmh_get_atoms_reply_wipe(&data);
+
+    return state;
+}
+
+bool ewmh_wm_type_ignored(const xcb_window_t win)
+{
+    bool state = false;
+
+    const xcb_get_property_cookie_t cookie = xcb_ewmh_get_wm_window_type_unchecked(cfg.ewmh, win);
+    xcb_ewmh_get_atoms_reply_t data;
+
+    if (!xcb_ewmh_get_wm_window_type_reply(cfg.ewmh, cookie, &data, (void *)0))
+        return state;
+
+    for (unsigned int i = 0; i < data.atoms_len; i++)
+        if ((state = data.atoms[i] == cfg.ewmh->_NET_WM_WINDOW_TYPE_UTILITY
+                  || data.atoms[i] == cfg.ewmh->_NET_WM_WINDOW_TYPE_DOCK
+                  || data.atoms[i] == cfg.ewmh->_NET_WM_WINDOW_TYPE_NOTIFICATION))
+            break;
+
+    xcb_ewmh_get_atoms_reply_wipe(&data);
+
+    return state;
+}
+

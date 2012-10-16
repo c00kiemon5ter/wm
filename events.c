@@ -2,6 +2,7 @@
 #include "global.h"
 #include "helpers.h"
 #include "window.h"
+#include "ewmh.h"
 
 void configure_request(xcb_generic_event_t *evt)
 {
@@ -57,7 +58,7 @@ void map_request(xcb_generic_event_t *evt)
 
     PRINTF("map request %u\n", e->window);
 
-    if (locate(e->window))
+    if (locate(e->window) || window_override_redirect(e->window) || ewmh_wm_type_ignored(e->window))
         return;
 
     client_t *c = (void *)0;
@@ -75,19 +76,12 @@ void map_request(xcb_generic_event_t *evt)
     PRINTF("client w   : %u\n", c->geom.width);
     PRINTF("client h   : %u\n", c->geom.height);
 
+    //apply_rules(c);
     add_client(c);
-
-    xcb_get_window_attributes_reply_t *wa = (void *)0;
-    if (!(wa = xcb_get_window_attributes_reply(cfg.conn, xcb_get_window_attributes(cfg.conn, e->window), (void *)0)))
-        return;
-
-    bool ignore = wa->override_redirect;
-    free(wa);
-    if (ignore)
-        return;
 
     xcb_map_window(cfg.conn, e->window);
 
+    /* move to center of 1st monitor */
     uint32_t values[] = { c->mon->geom.x + (c->mon->geom.width - c->geom.width) / 2,
                           c->mon->geom.y + (c->mon->geom.height - c->geom.height) / 2};
     xcb_configure_window(cfg.conn, e->window, XCB_CONFIG_WINDOW_X_Y, values);
