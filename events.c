@@ -1,12 +1,13 @@
 #include "events.h"
 #include "global.h"
 #include "helpers.h"
+#include "window.h"
 
 void configure_request(xcb_generic_event_t *evt)
 {
     xcb_configure_request_event_t *e = (xcb_configure_request_event_t *) evt;
 
-    PRINTF("configure request %X\n", e->window);
+    PRINTF("configure request %u\n", e->window);
 
     uint16_t mask = 0;
     uint32_t values[7];
@@ -52,9 +53,20 @@ void configure_request(xcb_generic_event_t *evt)
 
 void map_request(xcb_generic_event_t *evt)
 {
-    xcb_map_request_event_t *e = (xcb_map_request_event_t *) evt;
+    const xcb_map_request_event_t *e = (xcb_map_request_event_t *) evt;
 
-    PRINTF("map request %X\n", e->window);
+    PRINTF("map request %u\n", e->window);
+
+    if (locate(e->window))
+        return;
+
+    client_t *c = NULL;
+    if (!(c = create_client(e->window)))
+        err("failed to allocate client for window: %u\n", e->window);
+
+    PRINTF("client name: %s\n", c->name);
+
+    add_client(c);
 
     xcb_get_window_attributes_reply_t *wa = NULL;
     wa = xcb_get_window_attributes_reply(cfg.conn, xcb_get_window_attributes(cfg.conn, e->window), NULL);
