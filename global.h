@@ -3,6 +3,7 @@
 
 #include <limits.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
@@ -34,7 +35,7 @@ typedef enum {
  */
 typedef struct monitor_t {
     xcb_rectangle_t geom;
-    unsigned int tags;
+    uint16_t tags;
     layout_t mode;
     struct monitor_t *next;
 } monitor_t;
@@ -43,7 +44,7 @@ typedef struct monitor_t {
  * A client
  *
  * geom - the client geometry - x, y, width, height
- * tags - a bitmask with set bits the tags
+ * tags - a bitmask with set bits the tags of the client
  * name - the name of the window
  * next - the next client
  * win  - the window to manage
@@ -55,7 +56,7 @@ typedef struct monitor_t {
  */
 typedef struct client_t {
     xcb_rectangle_t geom;
-    unsigned int tags;
+    uint16_t tags;
     char name[BUF_NAME_LEN];
     bool is_urgent, is_floating, is_fullscrn;
     xcb_window_t win;
@@ -83,7 +84,7 @@ struct configuration {
     xcb_screen_t *screen;
     xcb_connection_t *conn;
     xcb_ewmh_connection_t *ewmh;
-    char tag_names[sizeof(unsigned int) * CHAR_BIT][BUF_NAME_LEN];
+    char tag_names[sizeof(uint16_t) * CHAR_BIT][BUF_NAME_LEN];
     monitor_t *monitors;
     client_t *clients;
     client_t *cur_client;

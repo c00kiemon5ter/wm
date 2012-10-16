@@ -68,10 +68,9 @@ void map_request(xcb_generic_event_t *evt)
     if (!(c = create_client(e->window)))
         err("failed to allocate client for window: %u\n", e->window);
 
-    char bits[BUF_BITS_SIZE];
     PRINTF("client name: %s\n", c->name);
     PRINTF("client win : %u\n", c->win);
-    PRINTF("client tags: %s\n", bitstr(c->tags, bits));
+    PRINTF("client tags: %x\n", c->tags);
     PRINTF("client tran: %s\n", BOOLSTR(c->is_floating));
     PRINTF("client full: %s\n", BOOLSTR(c->is_fullscrn));
     PRINTF("client x   : %u\n", c->geom.x);
