@@ -10,8 +10,8 @@ void ewmh_init(void)
     if (!(cfg.ewmh = calloc(1, sizeof(xcb_ewmh_connection_t))))
         err("failed to allocate ewmh object\n");
 
-    xcb_intern_atom_cookie_t *ewmh_cookies = xcb_ewmh_init_atoms(cfg.conn, cfg.ewmh);
-    xcb_ewmh_init_atoms_replies(cfg.ewmh, ewmh_cookies, (void *)0);
+    xcb_intern_atom_cookie_t *cookie = xcb_ewmh_init_atoms(cfg.conn, cfg.ewmh);
+    xcb_ewmh_init_atoms_replies(cfg.ewmh, cookie, (void *)0);
 }
 
 void ewmh_set_supported_atoms(void)
@@ -35,8 +35,7 @@ void ewmh_set_supported_atoms(void)
 
 void ewmh_update_wm_name(const char *wm_name)
 {
-    snprintf(cfg.wm_name, sizeof(cfg.wm_name), "%s", wm_name);
-    xcb_ewmh_set_wm_name(cfg.ewmh, cfg.screen->root, strlen(cfg.wm_name), cfg.wm_name);
+    xcb_ewmh_set_wm_name(cfg.ewmh, cfg.screen->root, strlen(wm_name), wm_name);
 }
 
 void ewmh_update_active_window(const xcb_window_t win)
