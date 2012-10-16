@@ -46,7 +46,8 @@ bool randr(void)
         (*m)->geom.height = reply->height;
 
         BIT_SET((*m)->tags, 0);
-        (*m)->mode = GRID;
+        (*m)->m_area = 0;
+        (*m)->mode = VSTACK;
         (*m)->next = (void *)0;
 
         PRINTF("info for crtc: %u\n", crtc);

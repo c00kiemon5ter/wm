@@ -77,7 +77,7 @@ void grid(const monitor_t *mon, unsigned int wins)
 void vstack(const monitor_t *mon, unsigned int wins)
 {
     client_t *c = cfg.clients;
-    const uint16_t m_area = mon->geom.width * 0.6;
+    const uint16_t m_area = mon->geom.width * M_AREA_FACT + mon->m_area;
 
     /* look for the first window */
     while (c && (c->is_floating || c->is_fullscrn || !BITMASK_CHECK(mon->tags, c->tags)))
@@ -112,7 +112,7 @@ void vstack(const monitor_t *mon, unsigned int wins)
 void hstack(const monitor_t *mon, unsigned int wins)
 {
     client_t *c = cfg.clients;
-    const uint16_t m_area = mon->geom.height * 0.6;
+    const uint16_t m_area = mon->geom.height * M_AREA_FACT + mon->m_area;
 
     /* look for the first window */
     while (c && (c->is_floating || c->is_fullscrn || !BITMASK_CHECK(mon->tags, c->tags)))
