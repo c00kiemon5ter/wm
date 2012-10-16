@@ -1,10 +1,31 @@
 #include <string.h>
-#include <stdbool.h>
 
 #include "window.h"
 #include "helpers.h"
 #include "ewmh.h"
 #include "icccm.h"
+
+void window_set_visibility(const xcb_window_t win, bool visible)
+{
+    uint32_t values_off[] = { ROOT_EVENT_MASK & ~XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY };
+    uint32_t values_on[]  = { ROOT_EVENT_MASK };
+    xcb_change_window_attributes(cfg.conn, cfg.screen->root, XCB_CW_EVENT_MASK, values_off);
+    if (visible)
+        xcb_map_window(cfg.conn, win);
+    else
+        xcb_unmap_window(cfg.conn, win);
+    xcb_change_window_attributes(cfg.conn, cfg.screen->root, XCB_CW_EVENT_MASK, values_on);
+}
+
+inline void window_hide(const xcb_window_t win)
+{
+    window_set_visibility(win, false);
+}
+
+inline void window_show(const xcb_window_t win)
+{
+    window_set_visibility(win, true);
+}
 
 void window_set_border_width(xcb_window_t win, const uint16_t border_width)
 {
@@ -83,6 +104,16 @@ bool window_update_geom(const xcb_window_t win, xcb_rectangle_t *geom)
     return true;
 }
 
+void client_set_geom(client_t *c, const int16_t x, const int16_t y, const uint16_t w, const uint16_t h)
+{
+    window_move_resize(c->win, c->geom.x = x, c->geom.y = y, c->geom.width = w, c->geom.height = h);
+}
+
+void client_set_geom_geom(client_t *c, const xcb_rectangle_t geom)
+{
+    window_move_resize_geom(c->win, c->geom = geom);
+}
+
 client_t *create_client(const xcb_window_t win)
 {
     PRINTF("creating client for window: %u\n", win);
@@ -94,7 +125,8 @@ client_t *create_client(const xcb_window_t win)
 
     c->win = win;
     c->mon = cfg.cur_mon;
-    c->tags = cfg.cur_mon->tags;
+
+    BITMASK_SET(c->tags, cfg.cur_mon->tags);
 
     c->is_fullscrn = ewmh_wm_state_fullscreen(win);
     c->is_floating = icccm_is_transient(win) || ewmh_wm_type_dialog(win);
