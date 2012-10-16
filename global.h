@@ -54,7 +54,6 @@ typedef struct client_t {
  * global shared variables
  *
  * running      - state of the window manager
- * wm_name      - name of the window manager
  * def_screen   - the screen number
  * screen       - the screen struct
  * conx         - the connection to the X server
@@ -62,11 +61,11 @@ typedef struct client_t {
  * tag_names    - array with tag names
  * monitors     - list of available monitors
  * clients      - list of all managed clients
- * cur_client   - the current active and focused client
+ * cur_client   - the current, active and focused client
+ * cur_mon      - the current, active and focused monitor
  */
 struct configuration {
     bool running;
-    char wm_name[BUFLEN];
     int def_screen;
     xcb_screen_t *screen;
     xcb_connection_t *conn;
