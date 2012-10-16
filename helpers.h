@@ -2,9 +2,11 @@
 #define HELPERS_H
 
 #include <stdio.h>
-#include <stdarg.h>
 #include <stdint.h>
+#include <stdarg.h>
 #include <limits.h>
+
+#include <xcb/xcb.h>
 
 #define XCB_CONFIG_WINDOW_MOVE          XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y
 #define XCB_CONFIG_WINDOW_RESIZE        XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT

@@ -2,6 +2,7 @@
 #define EWMH_H
 
 #include <stdbool.h>
+
 #include <xcb/xcb.h>
 
 void ewmh_init(void);

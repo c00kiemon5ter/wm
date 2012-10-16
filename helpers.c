@@ -1,9 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <xcb/xcb.h>
-#include <xcb/xcb_event.h>
-
 #include "helpers.h"
 
 char *bitstr(uintmax_t val, char bits[static BUF_BITS_SIZE])

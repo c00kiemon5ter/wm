@@ -1,6 +1,9 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #include <xcb/xcb.h>
 
 #include "global.h"

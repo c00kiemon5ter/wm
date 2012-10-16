@@ -2,6 +2,7 @@
 #define ICCCM_H
 
 #include <stdbool.h>
+
 #include <xcb/xcb.h>
 
 bool icccm_get_window_name(const xcb_window_t, char *);

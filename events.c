@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #include "events.h"
 #include "global.h"
 #include "helpers.h"

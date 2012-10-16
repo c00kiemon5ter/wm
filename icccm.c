@@ -1,9 +1,10 @@
 #include <string.h>
+
 #include <xcb/xcb_icccm.h>
 
-#include "icccm.h"
 #include "global.h"
 #include "helpers.h"
+#include "icccm.h"
 
 bool icccm_get_window_name(const xcb_window_t win, char *name)
 {

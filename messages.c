@@ -1,8 +1,8 @@
 #include <string.h>
 
 #include "messages.h"
-#include "helpers.h"
 #include "cookiewm.h"
+#include "helpers.h"
 
 void process_message(char *msg, char *rsp)
 {
