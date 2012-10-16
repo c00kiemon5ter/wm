@@ -18,7 +18,7 @@
  */
 typedef enum {
     VSTACK,
-    BSTACK,
+    HSTACK,
     GRID,
     MAX,
     FLOAT,

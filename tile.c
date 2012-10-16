@@ -72,7 +72,7 @@ void vstack(const monitor_t *mon, unsigned int wins)
         }
 }
 
-void bstack(const monitor_t *mon, unsigned int wins)
+void hstack(const monitor_t *mon, unsigned int wins)
 {
     client_t *c = cfg.clients;
     uint16_t m_area = mon->geom.height * 0.6;
@@ -109,6 +109,7 @@ void tile(const monitor_t *mon, layout_t layout)
     if (!num_windows)
         return;
 
+    /* if a single window then maximize it */
     if (num_windows == 1) {
         monocle(mon, num_windows);
         return;
@@ -116,7 +117,7 @@ void tile(const monitor_t *mon, layout_t layout)
 
     switch (layout) {
         case VSTACK:    vstack(mon, num_windows);   break;
-        case BSTACK:    bstack(mon, num_windows);   break;
+        case HSTACK:    hstack(mon, num_windows);   break;
         case GRID:      grid(mon, num_windows);     break;
         case MAX:       monocle(mon, num_windows);  break;
         case FLOAT:     /* do not handle */         break;
