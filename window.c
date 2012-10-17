@@ -14,7 +14,7 @@
 /**
  * initialize allocate and return the new client
  */
-client_t *create_client(const xcb_window_t win)
+client_t *client_create(const xcb_window_t win)
 {
     PRINTF("creating client for window: %u\n", win);
 
@@ -46,7 +46,7 @@ client_t *create_client(const xcb_window_t win)
 /**
  * add given client to the end of the clients list
  */
-void add_client(client_t *c)
+void client_add(client_t *c)
 {
     PRINTF("adding client to end of list: %u\n", c->win);
 
@@ -58,9 +58,9 @@ void add_client(client_t *c)
 /**
  * remove given client from the clients list
  */
-void unlink_client(client_t *c)
+void client_unlink(client_t *c)
 {
-    PRINTF("removing client from client list: %u\n", c->win);
+    PRINTF("unlinking client from client list: %u\n", c->win);
 
     client_t **list = &cfg.clients;
     while (*list && *list != c) list = &(*list)->next;
@@ -71,7 +71,7 @@ void unlink_client(client_t *c)
 /**
  * locate the client that manages the given window
  */
-client_t *locate(const xcb_window_t win)
+client_t *client_locate(const xcb_window_t win)
 {
     for (client_t **c = &cfg.clients; *c; c = &(*c)->next)
         if ((*c)->win == win) {
@@ -81,6 +81,50 @@ client_t *locate(const xcb_window_t win)
 
     PRINTF("no client for window: %u\n", win);
     return (void *)0;
+}
+
+/* ** client move and resize functions ** */
+
+inline
+void client_set_geom(client_t *c, const int16_t x, const int16_t y, const uint16_t w, const uint16_t h)
+{
+    window_move_resize(c->win, c->geom.x = x, c->geom.y = y, c->geom.width = w, c->geom.height = h);
+}
+
+inline
+void client_set_geom_geom(client_t *c, const xcb_rectangle_t geom)
+{
+    window_move_resize_geom(c->win, c->geom = geom);
+}
+
+void client_toggle_fullscreen(client_t *c)
+{
+    c->is_fullscrn = !c->is_fullscrn;
+    xcb_atom_t values[] = { c->is_fullscrn ? cfg.ewmh->_NET_WM_STATE_FULLSCREEN : XCB_NONE };
+    xcb_ewmh_set_wm_state(cfg.ewmh, c->win, LENGTH(values), values);
+
+    if (c->is_fullscrn) {
+        window_set_border_width(c->win, 0);
+        window_move_resize_geom(c->win, c->mon->geom);
+    }
+}
+
+bool window_update_geom(const xcb_window_t win, xcb_rectangle_t *geom)
+{
+    const xcb_get_geometry_cookie_t cookie = xcb_get_geometry(cfg.conn, win);
+    xcb_get_geometry_reply_t *reply = xcb_get_geometry_reply(cfg.conn, cookie, (void *)0);
+
+    if (!reply)
+        return false;
+
+    geom->x = reply->x;
+    geom->y = reply->y;
+    geom->width = reply->width;
+    geom->height = reply->height;
+
+    free(reply);
+
+    return true;
 }
 
 bool window_override_redirect(const xcb_window_t win)
@@ -104,32 +148,6 @@ void window_set_border_width(xcb_window_t win, const uint16_t border_width)
 {
     const uint32_t values[] = { border_width };
     xcb_configure_window(cfg.conn, win, XCB_CONFIG_WINDOW_BORDER_WIDTH, values);
-}
-
-/* ** visibility functions ** */
-
-void window_set_visibility(const xcb_window_t win, bool visible)
-{
-    uint32_t values_off[] = { ROOT_EVENT_MASK & ~XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY };
-    uint32_t values_on[]  = { ROOT_EVENT_MASK };
-    xcb_change_window_attributes(cfg.conn, cfg.screen->root, XCB_CW_EVENT_MASK, values_off);
-    if (visible)
-        xcb_map_window(cfg.conn, win);
-    else
-        xcb_unmap_window(cfg.conn, win);
-    xcb_change_window_attributes(cfg.conn, cfg.screen->root, XCB_CW_EVENT_MASK, values_on);
-}
-
-inline
-void window_hide(const xcb_window_t win)
-{
-    window_set_visibility(win, false);
-}
-
-inline
-void window_show(const xcb_window_t win)
-{
-    window_set_visibility(win, true);
 }
 
 /* ** window move and resize function ** */
@@ -158,47 +176,29 @@ void window_move_resize_geom(const xcb_window_t win, const xcb_rectangle_t geom)
     xcb_configure_window(cfg.conn, win, XCB_CONFIG_WINDOW_MOVE_RESIZE, values);
 }
 
-/* ** client move and resize functions ** */
+/* ** visibility functions ** */
 
-inline
-void client_set_geom(client_t *c, const int16_t x, const int16_t y, const uint16_t w, const uint16_t h)
+void window_set_visibility(const xcb_window_t win, bool visible)
 {
-    window_move_resize(c->win, c->geom.x = x, c->geom.y = y, c->geom.width = w, c->geom.height = h);
+    uint32_t values_off[] = { ROOT_EVENT_MASK & ~XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY };
+    uint32_t values_on[]  = { ROOT_EVENT_MASK };
+    xcb_change_window_attributes(cfg.conn, cfg.screen->root, XCB_CW_EVENT_MASK, values_off);
+    if (visible)
+        xcb_map_window(cfg.conn, win);
+    else
+        xcb_unmap_window(cfg.conn, win);
+    xcb_change_window_attributes(cfg.conn, cfg.screen->root, XCB_CW_EVENT_MASK, values_on);
 }
 
 inline
-void client_set_geom_geom(client_t *c, const xcb_rectangle_t geom)
+void window_show(const xcb_window_t win)
 {
-    window_move_resize_geom(c->win, c->geom = geom);
+    window_set_visibility(win, true);
 }
 
-void toggle_fullscreen(client_t *c)
+inline
+void window_hide(const xcb_window_t win)
 {
-    c->is_fullscrn = !c->is_fullscrn;
-    xcb_atom_t values[] = { c->is_fullscrn ? cfg.ewmh->_NET_WM_STATE_FULLSCREEN : XCB_NONE };
-    xcb_ewmh_set_wm_state(cfg.ewmh, c->win, LENGTH(values), values);
-
-    if (c->is_fullscrn) {
-        window_set_border_width(c->win, 0);
-        window_move_resize_geom(c->win, c->mon->geom);
-    }
-}
-
-bool window_update_geom(const xcb_window_t win, xcb_rectangle_t *geom)
-{
-    const xcb_get_geometry_cookie_t cookie = xcb_get_geometry(cfg.conn, win);
-    xcb_get_geometry_reply_t *reply = xcb_get_geometry_reply(cfg.conn, cookie, (void *)0);
-
-    if (!reply)
-        return false;
-
-    geom->x = reply->x;
-    geom->y = reply->y;
-    geom->width = reply->width;
-    geom->height = reply->height;
-
-    free(reply);
-
-    return true;
+    window_set_visibility(win, false);
 }
 
