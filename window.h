@@ -11,6 +11,7 @@
 client_t *client_create(const xcb_window_t);
 void client_add(client_t *);
 void client_unlink(client_t *);
+bool client_kill(client_t *);
 client_t *client_locate(const xcb_window_t);
 
 void client_set_geom(client_t *, const int16_t, const int16_t, const uint16_t, const uint16_t);

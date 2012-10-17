@@ -69,6 +69,25 @@ void client_unlink(client_t *c)
 }
 
 /**
+ * close the given client's window
+ * or kill it if it won't close
+ */
+bool client_kill(client_t *c)
+{
+    bool state = icccm_close_window(c->win);
+
+    if (!state) {
+        xcb_kill_client(cfg.conn, c->win);
+        client_unlink(c);
+        free(c);
+    }
+
+    xcb_flush(cfg.conn);
+
+    return state;
+}
+
+/**
  * locate the client that manages the given window
  */
 client_t *client_locate(const xcb_window_t win)

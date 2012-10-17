@@ -81,6 +81,7 @@ void map_request(xcb_generic_event_t *evt)
     if (BITMASK_CHECK(c->mon->tags, c->tags)) {
         tile(c->mon, c->mon->mode);
         window_show(c->win);
+        cfg.cur_client = c;
     }
 }
 
