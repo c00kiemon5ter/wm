@@ -24,9 +24,9 @@ client_t *client_create(const xcb_window_t win)
         return false;
 
     c->win = win;
-    c->mon = cfg.cur_mon;
+    c->mon = *cfg.cur_mon;
 
-    BITMASK_SET(c->tags, cfg.cur_mon->tags);
+    BITMASK_SET(c->tags, (*cfg.cur_mon)->tags);
 
     c->is_fullscrn = ewmh_wm_state_fullscreen(win);
     c->is_floating = icccm_is_transient(win) || ewmh_wm_type_dialog(win);
@@ -62,10 +62,13 @@ void client_unlink(client_t *c)
 {
     PRINTF("unlinking client from client list: %u\n", c->win);
 
-    client_t **list = &cfg.clients;
-    while (*list && *list != c) list = &(*list)->next;
-    *list = c->next;
-    c->next = (void *)0;
+    client_t **list = (void *)0;
+    for (list = &cfg.clients; *list && *list != c; list = &(*list)->next);
+
+    if (*list) {
+        *list = c->next;
+        c->next = (void *)0;
+    }
 }
 
 /**
@@ -74,13 +77,13 @@ void client_unlink(client_t *c)
  */
 bool client_kill(client_t *c)
 {
+    if (!c)
+        err("------ Got NULL client\n");
+
     bool state = icccm_close_window(c->win);
 
-    if (!state) {
+    if (!state)
         xcb_kill_client(cfg.conn, c->win);
-        client_unlink(c);
-        free(c);
-    }
 
     xcb_flush(cfg.conn);
 
