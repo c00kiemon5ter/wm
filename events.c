@@ -104,7 +104,6 @@ void unmap_notify(xcb_generic_event_t *evt)
     if ((c = client_locate(e->window))) {
         client_unlink(c);
         tile(c->mon, c->mon->mode);
-        window_hide(c->win);
         free(c);
     }
 }
@@ -119,7 +118,6 @@ void destroy_notify(xcb_generic_event_t *evt)
     if ((c = client_locate(e->window))) {
         client_unlink(c);
         tile(c->mon, c->mon->mode);
-        window_hide(c->win);
         free(c);
     }
 }
