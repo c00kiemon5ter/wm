@@ -14,7 +14,7 @@ void configure_request(xcb_generic_event_t *evt)
     PRINTF("configure request %u\n", e->window);
 
     client_t *c = (void *)0;
-    if ((c = locate(e->window)) && IS_TILED(c)) {
+    if ((c = client_locate(e->window)) && IS_TILED(c)) {
         xcb_rectangle_t geom = IS_TILED(c) ? c->geom : c->mon->geom;
         xcb_configure_notify_event_t evt = {
             .response_type  = XCB_CONFIGURE_NOTIFY,
@@ -58,11 +58,11 @@ void map_request(xcb_generic_event_t *evt)
 
     PRINTF("map request %u\n", e->window);
 
-    if (locate(e->window) || window_override_redirect(e->window) || ewmh_wm_type_ignored(e->window))
+    if (client_locate(e->window) || window_override_redirect(e->window) || ewmh_wm_type_ignored(e->window))
         return;
 
     client_t *c = (void *)0;
-    if (!(c = create_client(e->window)))
+    if (!(c = client_create(e->window)))
         err("failed to allocate client for window: %u\n", e->window);
 
     PRINTF("client name: %s\n", c->name);
@@ -76,7 +76,7 @@ void map_request(xcb_generic_event_t *evt)
     PRINTF("client h   : %u\n", c->geom.height);
 
     /* FIXME apply_rules(c); */
-    add_client(c);
+    client_add(c);
 
     if (BITMASK_CHECK(c->mon->tags, c->tags)) {
         tile(c->mon, c->mon->mode);
@@ -101,17 +101,27 @@ void unmap_notify(xcb_generic_event_t *evt)
     PRINTF("unmap notify: %u\n", e->window);
 
     client_t *c = (void *)0;
-    if ((c = locate(e->window))) {
-        unlink_client(c);
-        window_hide(c->win);
+    if ((c = client_locate(e->window))) {
+        client_unlink(c);
         tile(c->mon, c->mon->mode);
+        window_hide(c->win);
         free(c);
     }
 }
 
 void destroy_notify(xcb_generic_event_t *evt)
 {
-    (void)evt;
+    xcb_destroy_notify_event_t *e = (xcb_destroy_notify_event_t *) evt;
+
+    PRINTF("destroy notify %u\n", e->window);
+
+    client_t *c = (void *)0;
+    if ((c = client_locate(e->window))) {
+        client_unlink(c);
+        tile(c->mon, c->mon->mode);
+        window_hide(c->win);
+        free(c);
+    }
 }
 
 void button_press(xcb_generic_event_t *evt)
