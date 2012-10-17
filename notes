@@ -1,5 +1,3 @@
-revisit BUFLEN ? BUFSIZ ?
-
 Never use a signed value to index an array or to store its bounds
 Use size_t to index an array or to store its bounds
 
@@ -29,4 +27,14 @@ union overlay {
     T x;
     unsigned char X[sizeof(T)];
 };
+
++-------+
+| TO.DO |
++-------+
+
+event handlers
+rules struct and checks
+messages interface
+focus mechanism
+update ewmh info (desktops, client list etc)
 
