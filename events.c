@@ -78,7 +78,7 @@ void map_request(xcb_generic_event_t *evt)
     /* FIXME apply_rules(c); */
     client_add(c);
 
-    if (BITMASK_CHECK(c->mon->tags, c->tags)) {
+    if (IS_VISIBLE(c)) {
         tile(c->mon, c->mon->mode);
         window_show(c->win);
     }
@@ -103,7 +103,8 @@ void client_message(xcb_generic_event_t *evt)
         client_toggle_fullscreen(c);
         tile(c->mon, c->mon->mode);
     } else if (e->type == cfg.ewmh->_NET_ACTIVE_WINDOW) {
-        *cfg.cur_client = c;
+        if (IS_VISIBLE(c))
+            *cfg.cur_client = c;
     }
 }
 
