@@ -86,7 +86,25 @@ void map_request(xcb_generic_event_t *evt)
 
 void client_message(xcb_generic_event_t *evt)
 {
-    (void)evt;
+    xcb_client_message_event_t *e = (xcb_client_message_event_t *) evt;
+
+    PRINTF("client message %u\n", e->window);
+
+    client_t *c = (void *)0;
+    if (!(c = client_locate(e->window)))
+        return;
+
+    if (e->type == cfg.ewmh->_NET_WM_STATE
+            && ((e->data.data32[1] == cfg.ewmh->_NET_WM_STATE_FULLSCREEN) ||
+                (e->data.data32[2] == cfg.ewmh->_NET_WM_STATE_FULLSCREEN))
+            && ((e->data.data32[0] == XCB_EWMH_WM_STATE_ADD    && !c->is_fullscrn) ||
+                (e->data.data32[0] == XCB_EWMH_WM_STATE_REMOVE &&  c->is_fullscrn) ||
+                (e->data.data32[0] == XCB_EWMH_WM_STATE_TOGGLE))) {
+        client_toggle_fullscreen(c);
+        tile(c->mon, c->mon->mode);
+    } else if (e->type == cfg.ewmh->_NET_ACTIVE_WINDOW) {
+        *cfg.cur_client = c;
+    }
 }
 
 void property_notify(xcb_generic_event_t *evt)
