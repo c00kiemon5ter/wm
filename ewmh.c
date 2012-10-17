@@ -32,12 +32,14 @@ void ewmh_set_supported_atoms(void)
     xcb_ewmh_set_supported(cfg.ewmh, cfg.def_screen, LENGTH(new_atoms), new_atoms);
 }
 
-inline void ewmh_update_active_window(const xcb_window_t win)
+inline
+void ewmh_update_active_window(const xcb_window_t win)
 {
     xcb_ewmh_set_active_window(cfg.ewmh, cfg.def_screen, (win == 0) ? XCB_NONE : win);
 }
 
-inline void ewmh_update_wm_name(const char *wm_name)
+inline
+void ewmh_update_wm_name(const char *wm_name)
 {
     xcb_ewmh_set_wm_name(cfg.ewmh, cfg.screen->root, strlen(wm_name), wm_name);
 }

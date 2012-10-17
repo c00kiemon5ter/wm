@@ -11,7 +11,7 @@ char *bitstr(uintmax_t val, char bits[static BUF_BITS_SIZE])
     PRINTF("dec: %zd\n", val);
     PRINTF("hex: %jx\n", val);
 
-    for (*--str = 0; val; val /= base)
+    for (*--str = '\0'; val; val /= base)
         *--str = '0' + val % base;
     if (!*str)
         *--str = '0';
@@ -24,12 +24,14 @@ char *bitstr(uintmax_t val, char bits[static BUF_BITS_SIZE])
     return str;
 }
 
-inline uintmax_t max(uintmax_t a, uintmax_t b)
+inline
+uintmax_t max(uintmax_t a, uintmax_t b)
 {
     return (a > b) ? a : b;
 }
 
-inline uintmax_t min(uintmax_t a, uintmax_t b)
+inline
+uintmax_t min(uintmax_t a, uintmax_t b)
 {
     return (a < b) ? a : b;
 }

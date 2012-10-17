@@ -33,8 +33,8 @@ char *bitstr(uintmax_t, char [static BUF_BITS_SIZE]);
 uintmax_t max(uintmax_t, uintmax_t);
 uintmax_t min(uintmax_t, uintmax_t);
 
+void err(char *, ...) __attribute__((noreturn));
 void warn(char *, ...);
-__attribute__((noreturn)) void err(char *, ...);
 
 uint32_t get_color(char *);
 
