@@ -56,6 +56,19 @@ void add_client(client_t *c)
 }
 
 /**
+ * remove given client from the clients list
+ */
+void unlink_client(client_t *c)
+{
+    PRINTF("removing client from client list: %u\n", c->win);
+
+    client_t **list = &cfg.clients;
+    while (*list && *list != c) list = &(*list)->next;
+    *list = c->next;
+    c->next = (void *)0;
+}
+
+/**
  * locate the client that manages the given window
  */
 client_t *locate(const xcb_window_t win)

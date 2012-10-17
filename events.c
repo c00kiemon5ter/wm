@@ -13,7 +13,7 @@ void configure_request(xcb_generic_event_t *evt)
 
     PRINTF("configure request %u\n", e->window);
 
-    client_t *c = NULL;
+    client_t *c = (void *)0;
     if ((c = locate(e->window)) && IS_TILED(c)) {
         xcb_rectangle_t geom = IS_TILED(c) ? c->geom : c->mon->geom;
         xcb_configure_notify_event_t evt = {
@@ -96,7 +96,17 @@ void property_notify(xcb_generic_event_t *evt)
 
 void unmap_notify(xcb_generic_event_t *evt)
 {
-    (void)evt;
+    xcb_unmap_notify_event_t *e = (xcb_unmap_notify_event_t *) evt;
+
+    PRINTF("unmap notify: %u\n", e->window);
+
+    client_t *c = (void *)0;
+    if ((c = locate(e->window))) {
+        unlink_client(c);
+        window_hide(c->win);
+        tile(c->mon, c->mon->mode);
+        free(c);
+    }
 }
 
 void destroy_notify(xcb_generic_event_t *evt)
