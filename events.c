@@ -13,46 +13,43 @@ void configure_request(xcb_generic_event_t *evt)
 
     PRINTF("configure request %u\n", e->window);
 
-    uint16_t mask = 0;
-    uint32_t values[7];
-    unsigned short i = 0;
+    client_t *c = NULL;
+    if ((c = locate(e->window)) && IS_TILED(c)) {
+        xcb_rectangle_t geom = IS_TILED(c) ? c->geom : c->mon->geom;
+        xcb_configure_notify_event_t evt = {
+            .response_type  = XCB_CONFIGURE_NOTIFY,
+            .event          = e->window,
+            .window         = e->window,
+            .above_sibling  = XCB_NONE,
+            .x      = geom.x,
+            .y      = geom.y,
+            .width  = geom.width,
+            .height = geom.height,
+            .border_width = 3,
+            .override_redirect = false
+        };
+        xcb_send_event(cfg.conn, false, e->window, XCB_EVENT_MASK_STRUCTURE_NOTIFY, (const char *)&evt);
+    } else {
+        uint32_t values[7] = { 0 };
+        uint32_t *val = values;
 
-    if (e->value_mask & XCB_CONFIG_WINDOW_X) {
-        mask |= XCB_CONFIG_WINDOW_X;
-        values[i++] = e->x;
+        if (BITMASK_CHECK(e->value_mask, XCB_CONFIG_WINDOW_X))
+            *val++ = e->x;
+        if (BITMASK_CHECK(e->value_mask, XCB_CONFIG_WINDOW_Y))
+            *val++ = e->y;
+        if (BITMASK_CHECK(e->value_mask, XCB_CONFIG_WINDOW_WIDTH))
+            *val++ = e->width;
+        if (BITMASK_CHECK(e->value_mask, XCB_CONFIG_WINDOW_HEIGHT))
+            *val++ = e->height;
+        if (BITMASK_CHECK(e->value_mask, XCB_CONFIG_WINDOW_BORDER_WIDTH))
+            *val++ = e->border_width;
+        if (BITMASK_CHECK(e->value_mask, XCB_CONFIG_WINDOW_SIBLING))
+            *val++ = e->sibling;
+        if (BITMASK_CHECK(e->value_mask, XCB_CONFIG_WINDOW_STACK_MODE))
+            *val++ = e->stack_mode;
+
+        xcb_configure_window(cfg.conn, e->window, e->value_mask, values);
     }
-
-    if (e->value_mask & XCB_CONFIG_WINDOW_Y) {
-        mask |= XCB_CONFIG_WINDOW_Y;
-        values[i++] = e->y;
-    }
-
-    if (e->value_mask & XCB_CONFIG_WINDOW_WIDTH) {
-        mask |= XCB_CONFIG_WINDOW_WIDTH;
-        values[i++] = e->width;
-    }
-
-    if (e->value_mask & XCB_CONFIG_WINDOW_HEIGHT) {
-        mask |= XCB_CONFIG_WINDOW_HEIGHT;
-        values[i++] = e->height;
-    }
-
-    if (e->value_mask & XCB_CONFIG_WINDOW_BORDER_WIDTH) {
-        mask |= XCB_CONFIG_WINDOW_BORDER_WIDTH;
-        values[i++] = e->border_width;
-    }
-
-    if (e->value_mask & XCB_CONFIG_WINDOW_SIBLING) {
-        mask |= XCB_CONFIG_WINDOW_SIBLING;
-        values[i++] = e->sibling;
-    }
-
-    if (e->value_mask & XCB_CONFIG_WINDOW_STACK_MODE) {
-        mask |= XCB_CONFIG_WINDOW_STACK_MODE;
-        values[i++] = e->stack_mode;
-    }
-
-    xcb_configure_window(cfg.conn, e->window, mask, values);
 }
 
 void map_request(xcb_generic_event_t *evt)
