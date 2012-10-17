@@ -35,12 +35,14 @@ typedef enum {
  * tags   - bitmask with set bits the active tags on the monitor
  * mode   - the layout for this monitor
  * m_area - adjustment of the master area
+ * m_wins - number of windows in master area
  * next   - the next available monitor
  */
 typedef struct monitor_t {
     xcb_rectangle_t geom;
     uint16_t tags;
     uint16_t m_area;
+    uint16_t m_wins;
     layout_t mode;
     struct monitor_t *next;
 } monitor_t;

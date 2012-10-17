@@ -6,11 +6,13 @@
 
 /**
  * Max layout - all windows fullscreen
+ *
  * +--------+
  * |        |
  * | M A X  |
  * |        |
  * +--------+
+ *
  */
 void monocle(const monitor_t *mon, unsigned int wins)
 {
@@ -29,6 +31,7 @@ void monocle(const monitor_t *mon, unsigned int wins)
  * +--+--+--+
  * |  |  |  |
  * +--------+
+ *
  */
 void grid(const monitor_t *mon, unsigned int wins)
 {
@@ -68,32 +71,34 @@ void grid(const monitor_t *mon, unsigned int wins)
 
 /**
  * vertical stack - the common tiling mode
+ *
  * +--------+
  * |    |   |
  * |    +---|
  * |    |   |
  * +--------+
+ *
  */
 void vstack(const monitor_t *mon, unsigned int wins)
 {
     client_t *c = cfg.clients;
+
+    /* place the first 'm_wins' windows in the master area */
     const uint16_t m_area = mon->geom.width * M_AREA_FACT + mon->m_area;
+    const uint16_t m_wins = (wins <= mon->m_wins) ? wins - 1 : mon->m_wins;
 
-    /* look for the first window */
-    while (c && (c->is_floating || c->is_fullscrn || !BITMASK_CHECK(mon->tags, c->tags)))
-        c = c->next;
+    for (int i = 0, m_h = mon->geom.height / m_wins; c && i < m_wins; c = c->next)
+        if (!c->is_floating && !c->is_fullscrn && BITMASK_CHECK(mon->tags, c->tags))
+            client_set_geom(c, mon->geom.x, mon->geom.y + i++ * m_h, m_area, m_h);
 
-    /* place the first window in the master area */
-    client_set_geom(c, mon->geom.x, mon->geom.y, m_area, mon->geom.height);
-    --wins;
+    /* all other windows go to the stack */
+    wins -= m_wins;
 
     const int16_t client_x = mon->geom.x + m_area;
-    int16_t client_y = mon->geom.y;
     const uint16_t client_w = mon->geom.width - m_area;
     const uint16_t client_h = mon->geom.height / wins;
 
-    /* all other windows go to the stack */
-    for (c = c->next; c && wins; c = c->next)
+    for (int16_t client_y = mon->geom.y; c && wins; c = c->next)
         if (!c->is_floating && !c->is_fullscrn && BITMASK_CHECK(mon->tags, c->tags)) {
             client_set_geom(c, client_x, client_y, client_w, client_h);
             client_y += client_h;
@@ -103,32 +108,34 @@ void vstack(const monitor_t *mon, unsigned int wins)
 
 /**
  * horizontal stack - bottom stack
+ *
  * +--------+
  * |        |
  * |--+--+--|
  * |  |  |  |
  * +--------+
+ *
  */
 void hstack(const monitor_t *mon, unsigned int wins)
 {
     client_t *c = cfg.clients;
+
+    /* place the first 'm_wins' windows in the master area */
     const uint16_t m_area = mon->geom.height * M_AREA_FACT + mon->m_area;
+    const uint16_t m_wins = (wins <= mon->m_wins) ? wins - 1 : mon->m_wins;
 
-    /* look for the first window */
-    while (c && (c->is_floating || c->is_fullscrn || !BITMASK_CHECK(mon->tags, c->tags)))
-        c = c->next;
+    for (int i = 0, m_w = mon->geom.width / m_wins; c && i < m_wins; c = c->next)
+        if (!c->is_floating && !c->is_fullscrn && BITMASK_CHECK(mon->tags, c->tags))
+            client_set_geom(c, mon->geom.x + i++ * m_w, mon->geom.y, m_w, m_area);
 
-    /* place the first window in the master area */
-    client_set_geom(c, mon->geom.x, mon->geom.y, mon->geom.width, m_area);
-    --wins;
+    /* all other windows go to the stack */
+    wins -= m_wins;
 
-    int16_t client_x = mon->geom.x;
     const int16_t client_y = mon->geom.y + m_area;
     const uint16_t client_w = mon->geom.width / wins;
     const uint16_t client_h = mon->geom.height - m_area;
 
-    /* all other windows go to the stack */
-    for (c = c->next; c && wins; c = c->next)
+    for (int16_t client_x = mon->geom.x; c && wins; c = c->next)
         if (!c->is_floating && !c->is_fullscrn && BITMASK_CHECK(mon->tags, c->tags)) {
             client_set_geom(c, client_x, client_y, client_w, client_h);
             client_x += client_w;

@@ -100,7 +100,15 @@ static void init_socket(int *sock_fd)
  */
 void init_wm(void)
 {
+    for (monitor_t *m = cfg.monitors; m; m = m->next) {
+        BIT_SET(m->tags, 0);
+        m->m_area = 0;
+        m->m_wins = 1;
+        m->mode = VSTACK;
+    }
+
     cfg.cur_mon = cfg.monitors;
+
     for (size_t i = 0; i < LENGTH(cfg.tag_names); i++)
         snprintf(cfg.tag_names[i], sizeof(cfg.tag_names[0]), "%zd", i);
 }
