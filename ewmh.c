@@ -75,7 +75,7 @@ bool ewmh_wm_state_fullscreen(const xcb_window_t win)
     if (!xcb_ewmh_get_wm_state_reply(cfg.ewmh, cookie, &data, (void *)0))
         return state;
 
-    for (unsigned int i = 0; i < data.atoms_len; i++)
+    for (unsigned short i = 0; i < data.atoms_len; i++)
         if ((state = data.atoms[i] == cfg.ewmh->_NET_WM_STATE_FULLSCREEN))
             break;
 
@@ -94,7 +94,7 @@ bool ewmh_wm_type_dialog(const xcb_window_t win)
     if (!xcb_ewmh_get_wm_window_type_reply(cfg.ewmh, cookie, &data, (void *)0))
         return state;
 
-    for (unsigned int i = 0; i < data.atoms_len; i++)
+    for (unsigned short i = 0; i < data.atoms_len; i++)
         if ((state = data.atoms[i] == cfg.ewmh->_NET_WM_WINDOW_TYPE_DIALOG))
             break;
 
@@ -113,7 +113,7 @@ bool ewmh_wm_type_ignored(const xcb_window_t win)
     if (!xcb_ewmh_get_wm_window_type_reply(cfg.ewmh, cookie, &data, (void *)0))
         return state;
 
-    for (unsigned int i = 0; i < data.atoms_len; i++)
+    for (unsigned short i = 0; i < data.atoms_len; i++)
         if ((state = data.atoms[i] == cfg.ewmh->_NET_WM_WINDOW_TYPE_UTILITY
                   || data.atoms[i] == cfg.ewmh->_NET_WM_WINDOW_TYPE_DOCK
                   || data.atoms[i] == cfg.ewmh->_NET_WM_WINDOW_TYPE_NOTIFICATION))
