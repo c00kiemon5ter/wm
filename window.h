@@ -8,8 +8,6 @@
 
 #include "global.h"
 
-#define NO_NAME     "no name"
-
 void window_set_visibility(const xcb_window_t, bool);
 void window_hide(const xcb_window_t);
 void window_show(const xcb_window_t);

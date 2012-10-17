@@ -8,10 +8,6 @@
 
 #include <xcb/xcb.h>
 
-#define XCB_CONFIG_WINDOW_MOVE          XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y
-#define XCB_CONFIG_WINDOW_RESIZE        XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT
-#define XCB_CONFIG_WINDOW_MOVE_RESIZE   XCB_CONFIG_WINDOW_MOVE | XCB_CONFIG_WINDOW_RESIZE
-
 #define LENGTH(x)           (sizeof(x) / sizeof(*x))
 #define BOOLSTR(x)          &("false\0true"[6*x])
 

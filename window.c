@@ -5,6 +5,12 @@
 #include "ewmh.h"
 #include "icccm.h"
 
+#define XCB_CONFIG_WINDOW_MOVE          XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y
+#define XCB_CONFIG_WINDOW_RESIZE        XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT
+#define XCB_CONFIG_WINDOW_MOVE_RESIZE   XCB_CONFIG_WINDOW_MOVE | XCB_CONFIG_WINDOW_RESIZE
+
+#define WINDOW_NO_NAME     "no name"
+
 void window_set_visibility(const xcb_window_t win, bool visible)
 {
     uint32_t values_off[] = { ROOT_EVENT_MASK & ~XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY };
@@ -136,7 +142,7 @@ client_t *create_client(const xcb_window_t win)
 
     if (!ewmh_get_window_name(win, c->name) &&
         !icccm_get_window_name(win, c->name))
-        snprintf(c->name, sizeof(c->name), "%s", NO_NAME);
+        snprintf(c->name, sizeof(c->name), "%s", WINDOW_NO_NAME);
 
     c->next = (void *)0;
 
