@@ -107,8 +107,8 @@ void init_wm(void)
         m->mode = VSTACK;
     }
 
-    cfg.cur_mon = cfg.monitors;
-    cfg.cur_client = cfg.clients;
+    cfg.cur_mon = &cfg.monitors;
+    cfg.cur_client = &cfg.clients;
 
     for (size_t i = 0; i < LENGTH(cfg.tag_names); i++)
         snprintf(cfg.tag_names[i], sizeof(cfg.tag_names[0]), "%zd", i);
