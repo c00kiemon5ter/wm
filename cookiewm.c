@@ -53,7 +53,7 @@ static void init_xcb(int *dpy_fd)
     const uint32_t values[] = {ROOT_EVENT_MASK};
     const xcb_void_cookie_t cookie = xcb_change_window_attributes_checked(cfg.conn, cfg.screen->root, XCB_CW_EVENT_MASK, values);
     const xcb_generic_error_t *error = xcb_request_check(cfg.conn, cookie);
-    if (error != (void *)0) {
+    if (error) {
         xcb_disconnect(cfg.conn);
         err("another window manager is already running\n");
     }

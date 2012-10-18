@@ -13,8 +13,8 @@ void configure_request(xcb_generic_event_t *evt)
 
     PRINTF("configure request %u\n", e->window);
 
-    client_t *c = (void *)0;
-    if ((c = client_locate(e->window)) && IS_TILED(c)) {
+    client_t *c = client_locate(e->window);
+    if (c && IS_TILED(c)) {
         xcb_rectangle_t geom = IS_TILED(c) ? c->geom : c->mon->geom;
         xcb_configure_notify_event_t evt = {
             .response_type  = XCB_CONFIGURE_NOTIFY,
@@ -61,8 +61,8 @@ void map_request(xcb_generic_event_t *evt)
     if (client_locate(e->window) || window_override_redirect(e->window) || ewmh_wm_type_ignored(e->window))
         return;
 
-    client_t *c = (void *)0;
-    if (!(c = client_create(e->window)))
+    client_t *c = client_create(e->window);
+    if (!c)
         err("failed to allocate client for window: %u\n", e->window);
 
     PRINTF("client name: %s\n", c->name);
@@ -90,8 +90,8 @@ void client_message(xcb_generic_event_t *evt)
 
     PRINTF("client message %u\n", e->window);
 
-    client_t *c = (void *)0;
-    if (!(c = client_locate(e->window)))
+    client_t *c = client_locate(e->window);
+    if (!c)
         return;
 
     if (e->type == cfg.ewmh->_NET_WM_STATE

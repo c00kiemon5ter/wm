@@ -18,9 +18,9 @@ client_t *client_create(const xcb_window_t win)
 {
     PRINTF("creating client for window: %u\n", win);
 
-    client_t *c = (void *)0;
+    client_t *c = calloc(1, sizeof(client_t));
 
-    if (!(c = calloc(1, sizeof(client_t))))
+    if (!c)
         return false;
 
     c->win = win;
@@ -62,8 +62,8 @@ void client_unlink(client_t *c)
 {
     PRINTF("unlinking client from client list: %u\n", c->win);
 
-    client_t **list = (void *)0;
-    for (list = &cfg.clients; *list && *list != c; list = &(*list)->next);
+    client_t **list = &cfg.clients;
+    for (; *list && *list != c; list = &(*list)->next);
 
     if (*list) {
         *list = c->next;
