@@ -115,18 +115,25 @@ void property_notify(xcb_generic_event_t *evt)
     (void)evt;
 }
 
+void remove_client(xcb_window_t win)
+{
+    PRINTF("removing client: %u\n", win);
+
+    client_t *c = client_locate(win);
+    if (c) {
+        client_unlink(c);
+        tile(c->mon);
+        free(c);
+    }
+}
+
 void unmap_notify(xcb_generic_event_t *evt)
 {
     xcb_unmap_notify_event_t *e = (xcb_unmap_notify_event_t *) evt;
 
     PRINTF("unmap notify: %u\n", e->window);
 
-    client_t *c = (void *)0;
-    if ((c = client_locate(e->window))) {
-        client_unlink(c);
-        tile(c->mon, c->mon->mode);
-        free(c);
-    }
+    remove_client(e->window);
 }
 
 void destroy_notify(xcb_generic_event_t *evt)
@@ -135,12 +142,7 @@ void destroy_notify(xcb_generic_event_t *evt)
 
     PRINTF("destroy notify %u\n", e->window);
 
-    client_t *c = (void *)0;
-    if ((c = client_locate(e->window))) {
-        client_unlink(c);
-        tile(c->mon, c->mon->mode);
-        free(c);
-    }
+    remove_client(e->window);
 }
 
 void button_press(xcb_generic_event_t *evt)
