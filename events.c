@@ -79,7 +79,7 @@ void map_request(xcb_generic_event_t *evt)
     client_add(c);
 
     if (IS_VISIBLE(c)) {
-        tile(c->mon, c->mon->mode);
+        tile(c->mon);
         window_show(c->win);
     }
 }
@@ -100,9 +100,11 @@ void client_message(xcb_generic_event_t *evt)
             && ((e->data.data32[0] == XCB_EWMH_WM_STATE_ADD    && !c->is_fullscrn) ||
                 (e->data.data32[0] == XCB_EWMH_WM_STATE_REMOVE &&  c->is_fullscrn) ||
                 (e->data.data32[0] == XCB_EWMH_WM_STATE_TOGGLE))) {
+        PRINTF("state fullscreen for client: %u\n", e->window);
         client_toggle_fullscreen(c);
-        tile(c->mon, c->mon->mode);
+        tile(c->mon);
     } else if (e->type == cfg.ewmh->_NET_ACTIVE_WINDOW) {
+        PRINTF("activating client: %u\n", e->window);
         if (IS_VISIBLE(c))
             *cfg.cur_client = c;
     }

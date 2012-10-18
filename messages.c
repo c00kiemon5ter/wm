@@ -23,7 +23,7 @@ void process_message(char *msg, char *rsp)
 
         monitor_t *m = (*cfg.cur_client)->mon;
         if (!client_kill(*cfg.cur_client))
-            tile(m, m->mode);
+            tile(m);
     }
 
     PRINTF("send response: %s\n", rsp);

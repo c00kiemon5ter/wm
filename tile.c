@@ -144,9 +144,10 @@ void hstack(const monitor_t *mon, unsigned short wins)
 }
 
 /**
- * tile the given monitor with the given layout
+ * tile the given monitor
+ * according to its mode
  */
-void tile(const monitor_t *mon, layout_t layout)
+void tile(const monitor_t *mon)
 {
     unsigned short num_windows = 0;
     for (client_t *c = cfg.clients; c; c = c->next)
@@ -162,13 +163,13 @@ void tile(const monitor_t *mon, layout_t layout)
         return;
     }
 
-    switch (layout) {
+    switch (mon->mode) {
         case VSTACK:    vstack(mon, num_windows);   break;
         case HSTACK:    hstack(mon, num_windows);   break;
         case GRID:      grid(mon, num_windows);     break;
         case MONOCLE:   monocle(mon, num_windows);  break;
         case FLOAT:     /* do not handle */         break;
-        default: PRINTF("unknown layout: %d\n", layout); break;
+        default: PRINTF("unknown layout: %d\n", mon->mode); break;
     }
     PRINTF("count of windows that match tag '%u' : %u\n", mon->tags, num_windows);
 }
