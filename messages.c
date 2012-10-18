@@ -26,6 +26,12 @@ void process_message(char *msg, char *rsp)
             tile(m);
     }
 
+    if (strcmp(msg, "tile") == 0) {
+        PRINTF("tile message %s\n", msg);
+
+        tile(*cfg.cur_mon);
+    }
+
     PRINTF("send response: %s\n", rsp);
 }
 
