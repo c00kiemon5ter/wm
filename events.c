@@ -81,6 +81,7 @@ void map_request(xcb_generic_event_t *evt)
     if (IS_VISIBLE(c)) {
         tile(c->mon);
         window_show(c->win);
+        cfg.cur_client = c;
     }
 }
 
