@@ -24,9 +24,9 @@ client_t *client_create(const xcb_window_t win)
         return false;
 
     c->win = win;
-    c->mon = *cfg.cur_mon;
+    c->mon = cfg.cur_mon;
 
-    BITMASK_SET(c->tags, (*cfg.cur_mon)->tags);
+    BITMASK_SET(c->tags, cfg.cur_mon->tags);
 
     c->is_fullscrn = ewmh_wm_state_fullscreen(win);
     c->is_floating = icccm_is_transient(win) || ewmh_wm_type_dialog(win);
@@ -62,23 +62,31 @@ void client_unlink(client_t *c)
 {
     PRINTF("unlinking client from client list: %u\n", c->win);
 
-    client_t **list = &cfg.clients;
-    for (; *list && *list != c; list = &(*list)->next);
+    client_t **p = &cfg.clients;
+    for (; *p && *p != c; p = &(*p)->next);
 
-    if (*list) {
-        *list = c->next;
-        c->next = (void *)0;
-    }
+    if (!*p) return;
+
+    *p = c->next;
+    c->next = (void *)0;
+
+    PRINTF("p is now: %u\n", (*p) ? (*p)->win : 0);
 }
 
 /**
  * close the given client's window
  * or kill it if it won't close
+ *
+ * a 'true' return value means that the window will
+ * close gracefully on the next event processing.
+ * a 'false' return value means that the window
+ * was killed and further actions maybe required,
+ * like, manually calling 'tile()' to arrange the
+ * new list of windows.
  */
 bool client_kill(client_t *c)
 {
-    if (!c)
-        err("------ Got NULL client\n");
+    PRINTF("killing client: %u\n", c->win);
 
     bool state = icccm_close_window(c->win);
 

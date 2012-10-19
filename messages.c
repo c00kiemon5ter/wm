@@ -18,18 +18,22 @@ void process_message(char *msg, char *rsp)
     if (strcmp(msg, "kill") == 0) {
         PRINTF("kill message: %s\n", msg);
 
-        if (!*cfg.cur_client)
+        if (!cfg.cur_client)
             return;
 
-        monitor_t *m = (*cfg.cur_client)->mon;
-        if (!client_kill(*cfg.cur_client))
+        monitor_t *m = cfg.cur_client->mon;
+        if (!client_kill(cfg.cur_client))
             tile(m);
+
+        cfg.cur_client = cfg.clients;
+
+        PRINTF("cur client is: %u\n", cfg.cur_client->win);
     }
 
     if (strcmp(msg, "tile") == 0) {
         PRINTF("tile message %s\n", msg);
 
-        tile(*cfg.cur_mon);
+        tile(cfg.cur_mon);
     }
 
     PRINTF("send response: %s\n", rsp);

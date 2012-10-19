@@ -107,7 +107,7 @@ void client_message(xcb_generic_event_t *evt)
     } else if (e->type == cfg.ewmh->_NET_ACTIVE_WINDOW) {
         PRINTF("activating client: %u\n", e->window);
         if (IS_VISIBLE(c))
-            *cfg.cur_client = c;
+            cfg.cur_client = c;
     }
 }
 
