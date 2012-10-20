@@ -11,5 +11,6 @@
 bool icccm_close_window(const xcb_window_t);
 bool icccm_get_window_name(const xcb_window_t, char *);
 bool icccm_is_transient(const xcb_window_t);
+bool icccm_has_urgent_hint(const xcb_window_t);
 
 #endif

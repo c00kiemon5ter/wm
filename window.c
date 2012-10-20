@@ -174,6 +174,12 @@ bool window_override_redirect(const xcb_window_t win)
     return state;
 }
 
+inline
+bool window_is_urgent(const xcb_window_t win)
+{
+    return icccm_has_urgent_hint(win);
+}
+
 void window_set_border_width(xcb_window_t win, const uint16_t border_width)
 {
     const uint32_t values[] = { border_width };

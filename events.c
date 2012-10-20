@@ -75,6 +75,9 @@ void map_request(xcb_generic_event_t *evt)
     PRINTF("client w   : %u\n", c->geom.width);
     PRINTF("client h   : %u\n", c->geom.height);
 
+    const uint32_t values[] = { XCB_EVENT_MASK_PROPERTY_CHANGE };
+    xcb_change_window_attributes(cfg.conn, c->win, XCB_CW_EVENT_MASK, values);
+
     /* FIXME apply_rules(c); */
     client_add(c);
 
@@ -113,7 +116,15 @@ void client_message(xcb_generic_event_t *evt)
 
 void property_notify(xcb_generic_event_t *evt)
 {
-    (void)evt;
+    xcb_property_notify_event_t *e = (xcb_property_notify_event_t *)evt;
+
+    PRINTF("property notify: %u\n", e->window);
+
+    client_t *c = client_locate(e->window);
+    if (e->atom != XCB_ATOM_WM_HINTS || !c || c == cfg.cur_client)
+        return;
+
+    c->is_urgent = window_is_urgent(c->win);
 }
 
 void remove_client(xcb_window_t win)

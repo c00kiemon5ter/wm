@@ -89,3 +89,22 @@ bool icccm_is_transient(const xcb_window_t win)
     return transient != XCB_NONE;
 }
 
+bool icccm_has_urgent_hint(const xcb_window_t win)
+{
+    bool state = false;
+
+    const xcb_get_property_cookie_t cookie = xcb_icccm_get_wm_hints_unchecked(cfg.conn, win);
+    xcb_icccm_wm_hints_t data;
+
+    if (!xcb_icccm_get_wm_hints_reply(cfg.conn, cookie, &data, (void *)0))
+        return state;
+
+    state = data.flags & XCB_ICCCM_WM_HINT_X_URGENCY;
+    PRINTF("state is: %s\n", BOOLSTR(state));
+
+    state = xcb_icccm_wm_hints_get_urgency(&data);
+    PRINTF("state is: %s\n", BOOLSTR(state));
+
+    return state;
+}
+
