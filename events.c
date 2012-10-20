@@ -9,7 +9,7 @@
 
 void configure_request(xcb_generic_event_t *evt)
 {
-    xcb_configure_request_event_t *e = (xcb_configure_request_event_t *) evt;
+    xcb_configure_request_event_t *e = (xcb_configure_request_event_t *)evt;
 
     PRINTF("configure request %u\n", e->window);
 
@@ -54,7 +54,7 @@ void configure_request(xcb_generic_event_t *evt)
 
 void map_request(xcb_generic_event_t *evt)
 {
-    const xcb_map_request_event_t *e = (xcb_map_request_event_t *) evt;
+    const xcb_map_request_event_t *e = (xcb_map_request_event_t *)evt;
 
     PRINTF("map request %u\n", e->window);
 
@@ -87,7 +87,7 @@ void map_request(xcb_generic_event_t *evt)
 
 void client_message(xcb_generic_event_t *evt)
 {
-    xcb_client_message_event_t *e = (xcb_client_message_event_t *) evt;
+    xcb_client_message_event_t *e = (xcb_client_message_event_t *)evt;
 
     PRINTF("client message %u\n", e->window);
 
@@ -130,7 +130,7 @@ void remove_client(xcb_window_t win)
 
 void unmap_notify(xcb_generic_event_t *evt)
 {
-    xcb_unmap_notify_event_t *e = (xcb_unmap_notify_event_t *) evt;
+    xcb_unmap_notify_event_t *e = (xcb_unmap_notify_event_t *)evt;
 
     PRINTF("unmap notify: %u\n", e->window);
 
@@ -139,7 +139,7 @@ void unmap_notify(xcb_generic_event_t *evt)
 
 void destroy_notify(xcb_generic_event_t *evt)
 {
-    xcb_destroy_notify_event_t *e = (xcb_destroy_notify_event_t *) evt;
+    xcb_destroy_notify_event_t *e = (xcb_destroy_notify_event_t *)evt;
 
     PRINTF("destroy notify %u\n", e->window);
 
