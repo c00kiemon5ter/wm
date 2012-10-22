@@ -168,8 +168,15 @@ void button_press(xcb_generic_event_t *evt)
     if (!c)
         return;
 
-    if (BUTTON_FOCUS == e->detail)
-        cfg.cur_client = c;
+    switch (e->detail) {
+        case BUTTON_FOCUS:
+            cfg.cur_client = c;
+            break;
+        case BUTTON_MOVE:
+        case BUTTON_RESIZE:
+            window_set_pointer(c->win, POINTER_TCORSS);
+            break;
+    }
 
     if (!window_grab_pointer())
         warn("failed to grab pointer over window: %u\n", e->child);
@@ -190,49 +197,6 @@ void motion_notify(xcb_generic_event_t *evt)
         c->is_floating = true;
         tile(c->mon);
     }
-
-    if (BITMASK_CHECK(e->state, BUTTON_RESIZE_MOTION)) {
-        int16_t mid_x = c->geom.x + (c->geom.width  / 2);
-        int16_t mid_y = c->geom.y + (c->geom.height / 2);
-        unsigned short cursor_type = { 0 };
-        uint16_t font_id = 0;
-
-        /* bitcodes designating cursor position
-         * first (lsb) bit is the position on the y axis
-         * second bit is the position on the x axis
-         *
-         *   cursor_type  position
-         *   case 0 : 00  TL Top Left
-         *   case 1 : 01  TR Top Right
-         *   case 2 : 10  BL Bottom Left
-         *   case 3 : 11  BR Bottom Right
-         */
-        if (mid_x < e->root_x)
-            BIT_SET(cursor_type, 0);
-        if (mid_y < e->root_y)
-            BIT_SET(cursor_type, 1);
-
-        switch (cursor_type) {
-            case 0: font_id = 134; break;
-            case 1: font_id = 136; break;
-            case 2: font_id =  12; break;
-            case 3: font_id =  14; break;
-        }
-
-        xcb_font_t font = xcb_generate_id(cfg.conn);
-        xcb_open_font(cfg.conn, font, sizeof("cursor"), "cursor");
-
-        xcb_cursor_t cursor = xcb_generate_id(cfg.conn);
-        xcb_create_glyph_cursor(cfg.conn, cursor, font, font, font_id, font_id + 1, 0,0,0, 0xFFFF,0xFFFF,0xFFFF);
-
-        xcb_gcontext_t gc = xcb_generate_id(cfg.conn);
-        xcb_create_gc(cfg.conn, gc, c->win, XCB_GC_FONT, &font);
-
-        xcb_change_window_attributes (cfg.conn, c->win, XCB_CW_CURSOR, &cursor);
-
-        xcb_free_cursor(cfg.conn, cursor);
-        xcb_close_font(cfg.conn, font);
-    }
 }
 
 void button_release(xcb_generic_event_t *evt)
@@ -242,24 +206,20 @@ void button_release(xcb_generic_event_t *evt)
     PRINTF("button '%u' released on event '%u' child '%u' at root (%d,%d) event (%d,%d) with state: %u\n",
             e->detail, e->event, e->child, e->root_x, e->root_y, e->event_x, e->event_y, e->state);
 
-    client_t *c = client_locate(e->child);
+    client_t *c = cfg.cur_client;
+
     if (!c)
         return;
 
-    xcb_font_t font = xcb_generate_id(cfg.conn);
-    xcb_open_font(cfg.conn, font, sizeof("cursor"), "cursor");
+    switch (e->detail) {
+        case BUTTON_MOVE:
+            client_move(c, e->root_x, e->root_y);
+            break;
+        case BUTTON_RESIZE:
+            break;
+    }
 
-    xcb_cursor_t cursor = xcb_generate_id(cfg.conn);
-    xcb_create_glyph_cursor(cfg.conn, cursor, font, font, 68, 68 + 1, 0,0,0, 0xFFFF,0xFFFF,0xFFFF);
-
-    xcb_gcontext_t gc = xcb_generate_id(cfg.conn);
-    xcb_create_gc(cfg.conn, gc, c->win, XCB_GC_FONT, &font);
-
-    xcb_change_window_attributes (cfg.conn, c->win, XCB_CW_CURSOR, &cursor);
-
-    xcb_free_cursor(cfg.conn, cursor);
-    xcb_close_font(cfg.conn, font);
-
+    window_set_pointer(c->win, POINTER_DEFAULT);
     window_ungrab_pointer();
 }
 

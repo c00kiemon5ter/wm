@@ -6,7 +6,6 @@
 #define BUTTON_FOCUS            XCB_BUTTON_INDEX_2
 #define BUTTON_MOVE             XCB_BUTTON_INDEX_1
 #define BUTTON_RESIZE           XCB_BUTTON_INDEX_3
-#define BUTTON_RESIZE_MOTION    XCB_EVENT_MASK_BUTTON_3_MOTION
 #define BUTTON_MOD              XCB_MOD_MASK_4
 #define BUTTON_MASK             ( XCB_EVENT_MASK_BUTTON_PRESS   \
                                 | XCB_EVENT_MASK_BUTTON_RELEASE )
