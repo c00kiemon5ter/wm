@@ -31,8 +31,8 @@ void window_set_border_width(const xcb_window_t, const uint16_t);
 void window_show(const xcb_window_t);
 void window_hide(const xcb_window_t);
 
-bool window_grab_pointer(void);
+bool window_grab_pointer(xcb_cursor_t);
 void window_ungrab_pointer(void);
-void window_set_pointer(const xcb_window_t, const uint16_t pointer_id);
+xcb_cursor_t window_get_pointer(const uint16_t);
 
 #endif

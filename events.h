@@ -3,7 +3,6 @@
 
 #include <xcb/xcb_event.h>
 
-#define BUTTON_FOCUS            XCB_BUTTON_INDEX_2
 #define BUTTON_MOVE             XCB_BUTTON_INDEX_1
 #define BUTTON_RESIZE           XCB_BUTTON_INDEX_3
 #define BUTTON_MOD              XCB_MOD_MASK_4

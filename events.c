@@ -168,35 +168,21 @@ void button_press(xcb_generic_event_t *evt)
     if (!c)
         return;
 
+    cfg.cur_client = c;
+
     switch (e->detail) {
-        case BUTTON_FOCUS:
-            cfg.cur_client = c;
-            break;
         case BUTTON_MOVE:
+            c->geom.x = e->root_x - c->geom.x;
+            c->geom.y = e->root_y - c->geom.y;
+            break;
         case BUTTON_RESIZE:
-            window_set_pointer(c->win, POINTER_TCORSS);
+            c->geom.width  = c->geom.width  - e->root_x;
+            c->geom.height = c->geom.height - e->root_y;
             break;
     }
 
-    if (!window_grab_pointer())
-        warn("failed to grab pointer over window: %u\n", e->child);
-}
-
-void motion_notify(xcb_generic_event_t *evt)
-{
-    xcb_motion_notify_event_t *e = (xcb_motion_notify_event_t *)evt;
-
-    PRINTF("pointer moved to root '%u' (%d,%d) event '%u' (%d,%d) upon child '%u' with state: %u\n",
-            e->root, e->root_x, e->root_y, e->event, e->event_x, e->event_y, e->child, e->state);
-
-    client_t *c = client_locate(e->child);
-    if (!c)
-        return;
-
-    if (!c->is_floating) {
-        c->is_floating = true;
-        tile(c->mon);
-    }
+    if (!window_grab_pointer(window_get_pointer(POINTER_TCORSS)))
+        warn("failed to grab pointer over window: %u\n", c->win);
 }
 
 void button_release(xcb_generic_event_t *evt)
@@ -207,20 +193,41 @@ void button_release(xcb_generic_event_t *evt)
             e->detail, e->event, e->child, e->root_x, e->root_y, e->event_x, e->event_y, e->state);
 
     client_t *c = cfg.cur_client;
-
     if (!c)
         return;
 
     switch (e->detail) {
         case BUTTON_MOVE:
-            client_move(c, e->root_x, e->root_y);
+            client_move(c, e->root_x - c->geom.x, e->root_y - c->geom.y);
             break;
         case BUTTON_RESIZE:
+            client_resize(c, e->root_x + c->geom.width, e->root_y + c->geom.height);
             break;
     }
 
-    window_set_pointer(c->win, POINTER_DEFAULT);
     window_ungrab_pointer();
+}
+
+void motion_notify(xcb_generic_event_t *evt)
+{
+    xcb_motion_notify_event_t *e = (xcb_motion_notify_event_t *)evt;
+
+    PRINTF("pointer moved to root '%u' (%d,%d) event '%u' (%d,%d) upon child '%u' with state: %u\n",
+            e->root, e->root_x, e->root_y, e->event, e->event_x, e->event_y, e->child, e->state);
+
+    /* FIXME or just cfg.cur_client */
+    client_t *c = client_locate(e->child);
+    if (!c)
+        return;
+
+    if (!c->is_floating) {
+        c->is_floating = true;
+        tile(c->mon);
+    }
+
+    // FIXME motion notify
+    // FIXME maybe update window geom ?
+    // FIXME or just draw a rectangle
 }
 
 /**
@@ -254,8 +261,6 @@ void register_mouse_events(void)
                     XCB_GRAB_MODE_ASYNC, XCB_NONE, XCB_NONE, BUTTON_MOVE, BUTTON_MOD);
     xcb_grab_button(cfg.conn, false, cfg.screen->root, BUTTON_MASK, XCB_GRAB_MODE_SYNC,
                     XCB_GRAB_MODE_ASYNC, XCB_NONE, XCB_NONE, BUTTON_RESIZE, BUTTON_MOD);
-    xcb_grab_button(cfg.conn, false, cfg.screen->root, BUTTON_MASK, XCB_GRAB_MODE_SYNC,
-                    XCB_GRAB_MODE_ASYNC, XCB_NONE, XCB_NONE, BUTTON_FOCUS, BUTTON_MOD);
 }
 
 void handle_event(xcb_generic_event_t *evt)

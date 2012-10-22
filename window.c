@@ -254,16 +254,19 @@ void window_set_border_width(xcb_window_t win, const uint16_t border_width)
 
 /* ** pointer related functions ** */
 
-bool window_grab_pointer(void)
+bool window_grab_pointer(xcb_cursor_t cursor)
 {
     xcb_grab_pointer_cookie_t cookie = xcb_grab_pointer_unchecked(cfg.conn, false, cfg.screen->root, POINTER_GRAB_MASK,
-                                        XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC, XCB_NONE, XCB_NONE, XCB_CURRENT_TIME);
+                                        XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC, XCB_NONE, cursor, XCB_CURRENT_TIME);
     xcb_grab_pointer_reply_t *reply = xcb_grab_pointer_reply(cfg.conn, cookie, (void *)0);
+
+    xcb_free_cursor(cfg.conn, cursor);
 
     if (!reply)
         return false;
 
     free(reply);
+
     return true;
 }
 
@@ -273,7 +276,7 @@ void window_ungrab_pointer(void)
     xcb_ungrab_pointer(cfg.conn, XCB_CURRENT_TIME);
 }
 
-void window_set_pointer(const xcb_window_t win, const uint16_t pointer_id)
+xcb_cursor_t window_get_pointer(const uint16_t pointer_id)
 {
     xcb_font_t font = xcb_generate_id(cfg.conn);
     xcb_open_font(cfg.conn, font, sizeof("cursor"), "cursor");
@@ -281,12 +284,8 @@ void window_set_pointer(const xcb_window_t win, const uint16_t pointer_id)
     xcb_cursor_t cursor = xcb_generate_id(cfg.conn);
     xcb_create_glyph_cursor(cfg.conn, cursor, font, font, pointer_id, pointer_id + 1, 0xFFFF,0xFFFF,0xFFFF, 0,0,0);
 
-    xcb_gcontext_t gc = xcb_generate_id(cfg.conn);
-    xcb_create_gc(cfg.conn, gc, win, XCB_GC_FONT, &font);
-
-    xcb_change_window_attributes (cfg.conn, win, XCB_CW_CURSOR, &cursor);
-
-    xcb_free_cursor(cfg.conn, cursor);
     xcb_close_font(cfg.conn, font);
+
+    return cursor;
 }
 
