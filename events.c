@@ -84,7 +84,7 @@ void map_request(xcb_generic_event_t *evt)
     if (IS_VISIBLE(c)) {
         tile(c->mon);
         window_show(c->win);
-        cfg.cur_client = c;
+        cfg.client_cur = c;
     }
 }
 
@@ -110,7 +110,7 @@ void client_message(xcb_generic_event_t *evt)
     } else if (e->type == cfg.ewmh->_NET_ACTIVE_WINDOW) {
         PRINTF("activating client: %u\n", e->window);
         if (IS_VISIBLE(c))
-            cfg.cur_client = c;
+            cfg.client_cur = c;
     }
 }
 
@@ -121,7 +121,7 @@ void property_notify(xcb_generic_event_t *evt)
     PRINTF("property notify: %u\n", e->window);
 
     client_t *c = client_locate(e->window);
-    if (e->atom != XCB_ATOM_WM_HINTS || !c || c == cfg.cur_client)
+    if (e->atom != XCB_ATOM_WM_HINTS || !c || c == cfg.client_cur)
         return;
 
     c->is_urgent = window_is_urgent(c->win);
@@ -168,7 +168,7 @@ void button_press(xcb_generic_event_t *evt)
     if (!c)
         return;
 
-    cfg.cur_client = c;
+    cfg.client_cur = c;
 
     switch (e->detail) {
         case BUTTON_MOVE:
@@ -192,7 +192,7 @@ void button_release(xcb_generic_event_t *evt)
     PRINTF("button '%u' released on event '%u' child '%u' at root (%d,%d) event (%d,%d) with state: %u\n",
             e->detail, e->event, e->child, e->root_x, e->root_y, e->event_x, e->event_y, e->state);
 
-    client_t *c = cfg.cur_client;
+    client_t *c = cfg.client_cur;
     if (!c)
         return;
 
@@ -215,7 +215,7 @@ void motion_notify(xcb_generic_event_t *evt)
     PRINTF("pointer moved to root '%u' (%d,%d) event '%u' (%d,%d) upon child '%u' with state: %u\n",
             e->root, e->root_x, e->root_y, e->event, e->event_x, e->event_y, e->child, e->state);
 
-    /* FIXME or just cfg.cur_client */
+    /* FIXME or just cfg.client_cur*/
     client_t *c = client_locate(e->child);
     if (!c)
         return;

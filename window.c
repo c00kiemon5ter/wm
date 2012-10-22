@@ -78,9 +78,9 @@ client_t *client_create(const xcb_window_t win)
         return false;
 
     c->win = win;
-    c->mon = cfg.cur_mon;
+    c->mon = cfg.monitor_cur;
 
-    BITMASK_SET(c->tags, cfg.cur_mon->tags);
+    BITMASK_SET(c->tags, cfg.monitor_cur->tags);
 
     c->is_fullscrn = ewmh_wm_state_fullscreen(win);
     c->is_floating = icccm_is_transient(win) || ewmh_wm_type_dialog(win);

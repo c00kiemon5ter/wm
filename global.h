@@ -96,8 +96,8 @@ struct configuration {
     char tag_names[sizeof(uint16_t) * CHAR_BIT][BUF_NAME_LEN];
     monitor_t *monitors;
     client_t *clients;
-    client_t *cur_client;
-    monitor_t *cur_mon;
+    client_t *client_cur;
+    monitor_t *monitor_cur;
 };
 
 extern struct configuration cfg;
