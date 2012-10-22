@@ -13,6 +13,58 @@
                                         | XCB_EVENT_MASK_BUTTON_RELEASE \
                                         | XCB_EVENT_MASK_POINTER_MOTION )
 
+/* ** window move and resize function ** */
+
+void window_move(const xcb_window_t win, const int16_t x, const int16_t y)
+{
+    const uint32_t values[] = { x, y };
+    xcb_configure_window(cfg.conn, win, CONFIG_WINDOW_MOVE, values);
+}
+
+void window_resize(const xcb_window_t win, const uint16_t width, const uint16_t height)
+{
+    const uint32_t values[] = { width, height };
+    xcb_configure_window(cfg.conn, win, CONFIG_WINDOW_RESIZE, values);
+}
+
+void window_move_resize(const xcb_window_t win, const int16_t x, const int16_t y, const uint16_t width, const uint16_t height)
+{
+    const uint32_t values[] = { x, y, width, height };
+    xcb_configure_window(cfg.conn, win, CONFIG_WINDOW_MOVE_RESIZE, values);
+}
+
+void window_move_resize_geom(const xcb_window_t win, const xcb_rectangle_t geom)
+{
+    const uint32_t values[] = { geom.x, geom.y, geom.width, geom.height };
+    xcb_configure_window(cfg.conn, win, CONFIG_WINDOW_MOVE_RESIZE, values);
+}
+
+/* ** visibility functions ** */
+
+void window_set_visibility(const xcb_window_t win, bool visible)
+{
+    uint32_t values_off[] = { ROOT_EVENT_MASK & ~XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY };
+    uint32_t values_on[]  = { ROOT_EVENT_MASK };
+    xcb_change_window_attributes(cfg.conn, cfg.screen->root, XCB_CW_EVENT_MASK, values_off);
+    if (visible)
+        xcb_map_window(cfg.conn, win);
+    else
+        xcb_unmap_window(cfg.conn, win);
+    xcb_change_window_attributes(cfg.conn, cfg.screen->root, XCB_CW_EVENT_MASK, values_on);
+}
+
+inline
+void window_show(const xcb_window_t win)
+{
+    window_set_visibility(win, true);
+}
+
+inline
+void window_hide(const xcb_window_t win)
+{
+    window_set_visibility(win, false);
+}
+
 /**
  * initialize allocate and return the new client
  */
@@ -118,13 +170,25 @@ client_t *client_locate(const xcb_window_t win)
 /* ** client move and resize functions ** */
 
 inline
-void client_set_geom(client_t *c, const int16_t x, const int16_t y, const uint16_t w, const uint16_t h)
+void client_move(client_t *c, const int16_t x, const int16_t y)
+{
+    window_move(c->win, c->geom.x = x, c->geom.y = y);
+}
+
+inline
+void client_resize(client_t *c, const uint16_t w, const uint16_t h)
+{
+    window_resize(c->win, c->geom.width = w, c->geom.height = h);
+}
+
+inline
+void client_move_resize(client_t *c, const int16_t x, const int16_t y, const uint16_t w, const uint16_t h)
 {
     window_move_resize(c->win, c->geom.x = x, c->geom.y = y, c->geom.width = w, c->geom.height = h);
 }
 
 inline
-void client_set_geom_geom(client_t *c, const xcb_rectangle_t geom)
+void client_move_resize_geom(client_t *c, const xcb_rectangle_t geom)
 {
     window_move_resize_geom(c->win, c->geom = geom);
 }
@@ -186,58 +250,6 @@ void window_set_border_width(xcb_window_t win, const uint16_t border_width)
 {
     const uint32_t values[] = { border_width };
     xcb_configure_window(cfg.conn, win, XCB_CONFIG_WINDOW_BORDER_WIDTH, values);
-}
-
-/* ** window move and resize function ** */
-
-void window_move(const xcb_window_t win, const int16_t x, const int16_t y)
-{
-    const uint32_t values[] = { x, y };
-    xcb_configure_window(cfg.conn, win, CONFIG_WINDOW_MOVE, values);
-}
-
-void window_resize(const xcb_window_t win, const uint16_t width, const uint16_t height)
-{
-    const uint32_t values[] = { width, height };
-    xcb_configure_window(cfg.conn, win, CONFIG_WINDOW_RESIZE, values);
-}
-
-void window_move_resize(const xcb_window_t win, const int16_t x, const int16_t y, const uint16_t width, const uint16_t height)
-{
-    const uint32_t values[] = { x, y, width, height };
-    xcb_configure_window(cfg.conn, win, CONFIG_WINDOW_MOVE_RESIZE, values);
-}
-
-void window_move_resize_geom(const xcb_window_t win, const xcb_rectangle_t geom)
-{
-    const uint32_t values[] = { geom.x, geom.y, geom.width, geom.height };
-    xcb_configure_window(cfg.conn, win, CONFIG_WINDOW_MOVE_RESIZE, values);
-}
-
-/* ** visibility functions ** */
-
-void window_set_visibility(const xcb_window_t win, bool visible)
-{
-    uint32_t values_off[] = { ROOT_EVENT_MASK & ~XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY };
-    uint32_t values_on[]  = { ROOT_EVENT_MASK };
-    xcb_change_window_attributes(cfg.conn, cfg.screen->root, XCB_CW_EVENT_MASK, values_off);
-    if (visible)
-        xcb_map_window(cfg.conn, win);
-    else
-        xcb_unmap_window(cfg.conn, win);
-    xcb_change_window_attributes(cfg.conn, cfg.screen->root, XCB_CW_EVENT_MASK, values_on);
-}
-
-inline
-void window_show(const xcb_window_t win)
-{
-    window_set_visibility(win, true);
-}
-
-inline
-void window_hide(const xcb_window_t win)
-{
-    window_set_visibility(win, false);
 }
 
 /* ** pointer related functions ** */
