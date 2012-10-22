@@ -159,20 +159,145 @@ void destroy_notify(xcb_generic_event_t *evt)
 
 void button_press(xcb_generic_event_t *evt)
 {
-    (void)evt;
-}
+    xcb_button_press_event_t *e = (xcb_button_press_event_t *)evt;
 
-void button_release(xcb_generic_event_t *evt)
-{
-    (void)evt;
+    PRINTF("button '%u' pressed on event '%u' child '%u' at root (%d,%d) event (%d,%d) with state: %u\n",
+            e->detail, e->event, e->child, e->root_x, e->root_y, e->event_x, e->event_y, e->state);
+
+    client_t *c = client_locate(e->child);
+    if (!c)
+        return;
+
+    if (BUTTON_FOCUS == e->detail)
+        cfg.cur_client = c;
+
+    if (!window_grab_pointer())
+        warn("failed to grab pointer over window: %u\n", e->child);
 }
 
 void motion_notify(xcb_generic_event_t *evt)
 {
-    (void)evt;
+    xcb_motion_notify_event_t *e = (xcb_motion_notify_event_t *)evt;
+
+    PRINTF("pointer moved to root '%u' (%d,%d) event '%u' (%d,%d) upon child '%u' with state: %u\n",
+            e->root, e->root_x, e->root_y, e->event, e->event_x, e->event_y, e->child, e->state);
+
+    client_t *c = client_locate(e->child);
+    if (!c)
+        return;
+
+    if (!c->is_floating) {
+        c->is_floating = true;
+        tile(c->mon);
+    }
+
+    if (BITMASK_CHECK(e->state, BUTTON_RESIZE_MOTION)) {
+        int16_t mid_x = c->geom.x + (c->geom.width  / 2);
+        int16_t mid_y = c->geom.y + (c->geom.height / 2);
+        unsigned short cursor_type = { 0 };
+        uint16_t font_id = 0;
+
+        /* bitcodes designating cursor position
+         * first (lsb) bit is the position on the y axis
+         * second bit is the position on the x axis
+         *
+         *   cursor_type  position
+         *   case 0 : 00  TL Top Left
+         *   case 1 : 01  TR Top Right
+         *   case 2 : 10  BL Bottom Left
+         *   case 3 : 11  BR Bottom Right
+         */
+        if (mid_x < e->root_x)
+            BIT_SET(cursor_type, 0);
+        if (mid_y < e->root_y)
+            BIT_SET(cursor_type, 1);
+
+        switch (cursor_type) {
+            case 0: font_id = 134; break;
+            case 1: font_id = 136; break;
+            case 2: font_id =  12; break;
+            case 3: font_id =  14; break;
+        }
+
+        xcb_font_t font = xcb_generate_id(cfg.conn);
+        xcb_open_font(cfg.conn, font, sizeof("cursor"), "cursor");
+
+        xcb_cursor_t cursor = xcb_generate_id(cfg.conn);
+        xcb_create_glyph_cursor(cfg.conn, cursor, font, font, font_id, font_id + 1, 0,0,0, 0xFFFF,0xFFFF,0xFFFF);
+
+        xcb_gcontext_t gc = xcb_generate_id(cfg.conn);
+        xcb_create_gc(cfg.conn, gc, c->win, XCB_GC_FONT, &font);
+
+        xcb_change_window_attributes (cfg.conn, c->win, XCB_CW_CURSOR, &cursor);
+
+        xcb_free_cursor(cfg.conn, cursor);
+        xcb_close_font(cfg.conn, font);
+    }
 }
 
-/* FIXME implement handlers */
+void button_release(xcb_generic_event_t *evt)
+{
+    xcb_button_release_event_t *e = (xcb_button_release_event_t *)evt;
+
+    PRINTF("button '%u' released on event '%u' child '%u' at root (%d,%d) event (%d,%d) with state: %u\n",
+            e->detail, e->event, e->child, e->root_x, e->root_y, e->event_x, e->event_y, e->state);
+
+    client_t *c = client_locate(e->child);
+    if (!c)
+        return;
+
+    xcb_font_t font = xcb_generate_id(cfg.conn);
+    xcb_open_font(cfg.conn, font, sizeof("cursor"), "cursor");
+
+    xcb_cursor_t cursor = xcb_generate_id(cfg.conn);
+    xcb_create_glyph_cursor(cfg.conn, cursor, font, font, 68, 68 + 1, 0,0,0, 0xFFFF,0xFFFF,0xFFFF);
+
+    xcb_gcontext_t gc = xcb_generate_id(cfg.conn);
+    xcb_create_gc(cfg.conn, gc, c->win, XCB_GC_FONT, &font);
+
+    xcb_change_window_attributes (cfg.conn, c->win, XCB_CW_CURSOR, &cursor);
+
+    xcb_free_cursor(cfg.conn, cursor);
+    xcb_close_font(cfg.conn, font);
+
+    window_ungrab_pointer();
+}
+
+/**
+ * set the event mask for the root window
+ *
+ * the event mask defines for which events
+ * we will be notified about.
+ * if setting the event mask fails, then
+ * another window manager is running, as
+ * XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT
+ * can be only be set by one client.
+ */
+void register_root_events(void)
+{
+    const uint32_t values[] = { ROOT_EVENT_MASK };
+    const xcb_void_cookie_t cookie = xcb_change_window_attributes_checked(cfg.conn, cfg.screen->root, XCB_CW_EVENT_MASK, values);
+    const xcb_generic_error_t *error = xcb_request_check(cfg.conn, cookie);
+
+    if (error) {
+        xcb_disconnect(cfg.conn);
+        err("another window manager is already running\n");
+    }
+}
+
+/**
+ * listen for mouse events
+ */
+void register_mouse_events(void)
+{
+    xcb_grab_button(cfg.conn, false, cfg.screen->root, BUTTON_MASK, XCB_GRAB_MODE_SYNC,
+                    XCB_GRAB_MODE_ASYNC, XCB_NONE, XCB_NONE, BUTTON_MOVE, BUTTON_MOD);
+    xcb_grab_button(cfg.conn, false, cfg.screen->root, BUTTON_MASK, XCB_GRAB_MODE_SYNC,
+                    XCB_GRAB_MODE_ASYNC, XCB_NONE, XCB_NONE, BUTTON_RESIZE, BUTTON_MOD);
+    xcb_grab_button(cfg.conn, false, cfg.screen->root, BUTTON_MASK, XCB_GRAB_MODE_SYNC,
+                    XCB_GRAB_MODE_ASYNC, XCB_NONE, XCB_NONE, BUTTON_FOCUS, BUTTON_MOD);
+}
+
 void handle_event(xcb_generic_event_t *evt)
 {
     switch (XCB_EVENT_RESPONSE_TYPE(evt)) {
