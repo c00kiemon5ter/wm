@@ -1,11 +1,12 @@
 
-VERSION = "git"
+VERSION = "cookiejar-git"
 WM_NAME = "cookiewm"
 CL_NAME = "cookie"
 
 CC      = cc
 LIBS    = -lxcb -lxcb-icccm -lxcb-ewmh -lxcb-xinerama -lxcb-randr
-CFLAGS  = -std=c99 -pedantic -Wall -Wextra -DWM_NAME=\"$(WM_NAME)\" -DVERSION=\"$(VERSION)\"
+CFLAGS  = -std=c99 -pedantic -pedantic-errors -Wall -Wextra
+CFLAGS += -DWM_NAME=\"$(WM_NAME)\" -DVERSION=\"$(VERSION)\"
 LDFLAGS = $(LIBS)
 
 PREFIX   ?= /usr/local
