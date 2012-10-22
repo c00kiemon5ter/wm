@@ -5,11 +5,13 @@
 #include "ewmh.h"
 #include "icccm.h"
 
-#define XCB_CONFIG_WINDOW_MOVE          XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y
-#define XCB_CONFIG_WINDOW_RESIZE        XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT
-#define XCB_CONFIG_WINDOW_MOVE_RESIZE   XCB_CONFIG_WINDOW_MOVE | XCB_CONFIG_WINDOW_RESIZE
-
-#define WINDOW_NO_NAME     "no name"
+#define WINDOW_NO_NAME                  "no name"
+#define CONFIG_WINDOW_MOVE              XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y
+#define CONFIG_WINDOW_RESIZE            XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT
+#define CONFIG_WINDOW_MOVE_RESIZE       CONFIG_WINDOW_MOVE | CONFIG_WINDOW_RESIZE
+#define POINTER_GRAB_MASK               ( XCB_EVENT_MASK_BUTTON_PRESS   \
+                                        | XCB_EVENT_MASK_BUTTON_RELEASE \
+                                        | XCB_EVENT_MASK_POINTER_MOTION )
 
 /**
  * initialize allocate and return the new client
@@ -191,25 +193,25 @@ void window_set_border_width(xcb_window_t win, const uint16_t border_width)
 void window_move(const xcb_window_t win, const int16_t x, const int16_t y)
 {
     const uint32_t values[] = { x, y };
-    xcb_configure_window(cfg.conn, win, XCB_CONFIG_WINDOW_MOVE, values);
+    xcb_configure_window(cfg.conn, win, CONFIG_WINDOW_MOVE, values);
 }
 
 void window_resize(const xcb_window_t win, const uint16_t width, const uint16_t height)
 {
     const uint32_t values[] = { width, height };
-    xcb_configure_window(cfg.conn, win, XCB_CONFIG_WINDOW_RESIZE, values);
+    xcb_configure_window(cfg.conn, win, CONFIG_WINDOW_RESIZE, values);
 }
 
 void window_move_resize(const xcb_window_t win, const int16_t x, const int16_t y, const uint16_t width, const uint16_t height)
 {
     const uint32_t values[] = { x, y, width, height };
-    xcb_configure_window(cfg.conn, win, XCB_CONFIG_WINDOW_MOVE_RESIZE, values);
+    xcb_configure_window(cfg.conn, win, CONFIG_WINDOW_MOVE_RESIZE, values);
 }
 
 void window_move_resize_geom(const xcb_window_t win, const xcb_rectangle_t geom)
 {
     const uint32_t values[] = { geom.x, geom.y, geom.width, geom.height };
-    xcb_configure_window(cfg.conn, win, XCB_CONFIG_WINDOW_MOVE_RESIZE, values);
+    xcb_configure_window(cfg.conn, win, CONFIG_WINDOW_MOVE_RESIZE, values);
 }
 
 /* ** visibility functions ** */
@@ -236,5 +238,26 @@ inline
 void window_hide(const xcb_window_t win)
 {
     window_set_visibility(win, false);
+}
+
+/* ** pointer related functions ** */
+
+bool window_grab_pointer(void)
+{
+    xcb_grab_pointer_cookie_t cookie = xcb_grab_pointer_unchecked(cfg.conn, false, cfg.screen->root, POINTER_GRAB_MASK,
+                                        XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC, XCB_NONE, XCB_NONE, XCB_CURRENT_TIME);
+    xcb_grab_pointer_reply_t *reply = xcb_grab_pointer_reply(cfg.conn, cookie, (void *)0);
+
+    if (!reply)
+        return false;
+
+    free(reply);
+    return true;
+}
+
+inline
+void window_ungrab_pointer(void)
+{
+    xcb_ungrab_pointer(cfg.conn, XCB_CURRENT_TIME);
 }
 

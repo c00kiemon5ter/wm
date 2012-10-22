@@ -32,4 +32,7 @@ void window_set_visibility(const xcb_window_t, bool);
 void window_show(const xcb_window_t);
 void window_hide(const xcb_window_t);
 
+bool window_grab_pointer(void);
+void window_ungrab_pointer(void);
+
 #endif
