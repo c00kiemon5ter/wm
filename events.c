@@ -164,9 +164,11 @@ void button_press(xcb_generic_event_t *evt)
     PRINTF("button '%u' pressed on event '%u' child '%u' at root (%d,%d) event (%d,%d) with state: %u\n",
             e->detail, e->event, e->child, e->root_x, e->root_y, e->event_x, e->event_y, e->state);
 
-    client_t *c = client_locate(e->child);
-    if (!c)
+    client_t *c = (void *)0;
+    if (!e->child || !(c = client_locate(e->child))) {
+        window_ungrab_pointer();
         return;
+    }
 
     cfg.client_cur = c;
 
