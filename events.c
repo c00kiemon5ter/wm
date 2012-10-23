@@ -163,15 +163,14 @@ void rec(unsigned int button, int x, int y)
     static int butt;
 
     xcb_gcontext_t gc = xcb_generate_id(cfg.conn);
-    xcb_create_gc(cfg.conn, gc, cfg.screen->root, XCB_GC_FUNCTION | XCB_GC_LINE_WIDTH, (uint32_t []){ XCB_GX_INVERT, 8 });
+    int mask = XCB_GC_FUNCTION | XCB_GC_LINE_WIDTH | XCB_GC_SUBWINDOW_MODE;
+    uint32_t values[] = { XCB_GX_INVERT, 8, XCB_SUBWINDOW_MODE_INCLUDE_INFERIORS };
+    xcb_create_gc(cfg.conn, gc, cfg.screen->root, mask, values);
 
-    if (button != XCB_NONE) {
+    if (button != XCB_NONE)
         butt = button;
-        curr = cfg.client_cur->geom;
-    }
-
-    /* clear previous rectangle */
-    xcb_poly_rectangle(cfg.conn, cfg.screen->root, gc, 1, &curr);
+    else /* clear previous rectangle */
+        xcb_poly_rectangle(cfg.conn, cfg.screen->root, gc, 1, &curr);
 
     curr = cfg.client_cur->geom;
 
@@ -188,41 +187,6 @@ void rec(unsigned int button, int x, int y)
 
     /* draw new rectangle */
     xcb_poly_rectangle(cfg.conn, cfg.screen->root, gc, 1, &curr);
-}
-
-void motion_notify(xcb_generic_event_t *evt)
-{
-    xcb_motion_notify_event_t *e = (xcb_motion_notify_event_t *)evt;
-
-    PRINTF("pointer moved to root '%u' (%d,%d) event '%u' (%d,%d) upon child '%u' with state: %u\n",
-            e->root, e->root_x, e->root_y, e->event, e->event_x, e->event_y, e->child, e->state);
-
-    client_t *c = cfg.client_cur;
-    if (!c)
-        return;
-
-    if (!c->is_floating) {
-        c->is_floating = true;
-        tile(c->mon);
-    }
-
-    rec(XCB_NONE, e->root_x, e->root_y);
-
-    // xcb_rectangle_t rectangle = cfg.client_cur->geom;
-    // if (BITMASK_CHECK(e->state, XCB_EVENT_MASK_BUTTON_1_MOTION)) {
-    //     rectangle.x = e->root_x - c->geom.x;
-    //     rectangle.y = e->root_y - c->geom.y;
-    // } else if (BITMASK_CHECK(e->state, XCB_EVENT_MASK_BUTTON_3_MOTION)) {
-    //     rectangle.width += e->root_x;
-    //     rectangle.height += e->root_y;
-    // }
-
-    // /* FIXME clear rectangle */
-    // uint32_t values[] = { XCB_GX_INVERT, XCB_SUBWINDOW_MODE_INCLUDE_INFERIORS};
-    // uint32_t mask = XCB_GC_FUNCTION | XCB_GC_SUBWINDOW_MODE;
-    // xcb_gcontext_t gc = xcb_generate_id(cfg.conn);
-    // xcb_create_gc(cfg.conn, gc, cfg.screen->root, mask, values);
-    // xcb_poly_rectangle(cfg.conn, cfg.screen->root, gc, 1, &rectangle);
 }
 
 void button_press(xcb_generic_event_t *evt)
@@ -263,21 +227,32 @@ void button_release(xcb_generic_event_t *evt)
     PRINTF("button '%u' released on event '%u' child '%u' at root (%d,%d) event (%d,%d) with state: %u\n",
             e->detail, e->event, e->child, e->root_x, e->root_y, e->event_x, e->event_y, e->state);
 
-    client_t *c = cfg.client_cur;
-    if (!c)
-        return;
-
     rec(e->detail, e->root_x, e->root_y);
     switch (e->detail) {
         case BUTTON_MOVE:
-            client_move(c, e->root_x - c->geom.x, e->root_y - c->geom.y);
+            client_move(cfg.client_cur, e->root_x - cfg.client_cur->geom.x, e->root_y - cfg.client_cur->geom.y);
             break;
         case BUTTON_RESIZE:
-            client_resize(c, e->root_x + c->geom.width, e->root_y + c->geom.height);
+            client_resize(cfg.client_cur, e->root_x + cfg.client_cur->geom.width, e->root_y + cfg.client_cur->geom.height);
             break;
     }
 
     window_ungrab_pointer();
+}
+
+void motion_notify(xcb_generic_event_t *evt)
+{
+    xcb_motion_notify_event_t *e = (xcb_motion_notify_event_t *)evt;
+
+    PRINTF("pointer moved to root '%u' (%d,%d) event '%u' (%d,%d) upon child '%u' with state: %u\n",
+            e->root, e->root_x, e->root_y, e->event, e->event_x, e->event_y, e->child, e->state);
+
+    if (!cfg.client_cur->is_floating) {
+        cfg.client_cur->is_floating = true;
+        tile(cfg.client_cur->mon);
+    }
+
+    rec(XCB_NONE, e->root_x, e->root_y);
 }
 
 /**
