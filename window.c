@@ -170,6 +170,40 @@ client_t *client_locate(const xcb_window_t win)
     return (void *)0;
 }
 
+/**
+ * create a new client for the given window
+ * apply rules and add to client list
+ */
+client_t *handle_window(xcb_window_t win)
+{
+    if (client_locate(win) || window_override_redirect(win) || ewmh_wm_type_ignored(win))
+        return (void *)0;
+
+    client_t *c = client_create(win);
+    if (!c)
+        err("failed to allocate client for window: %u\n", win);
+
+    PRINTF("client window  : %u\n", c->win);
+    PRINTF("client class   : %s\n", c->class);
+    PRINTF("client instance: %s\n", c->instance);
+    PRINTF("client title   : %s\n", c->title);
+    PRINTF("client floating: %s\n", BOOLSTR(c->is_floating));
+    PRINTF("client fullscrn: %s\n", BOOLSTR(c->is_fullscrn));
+    PRINTF("client tagmask : %x\n", c->tags);
+    PRINTF("client geom x  : %u\n", c->geom.x);
+    PRINTF("client geom y  : %u\n", c->geom.y);
+    PRINTF("client geom w  : %u\n", c->geom.width);
+    PRINTF("client geom h  : %u\n", c->geom.height);
+
+    const uint32_t values[] = { XCB_EVENT_MASK_PROPERTY_CHANGE };
+    xcb_change_window_attributes(cfg.conn, win, XCB_CW_EVENT_MASK, values);
+
+    /* FIXME apply_rules(c); */
+    client_add(c);
+
+    return c;
+}
+
 /* ** client move and resize functions ** */
 
 inline

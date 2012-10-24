@@ -16,6 +16,7 @@ void client_add(client_t *);
 void client_unlink(client_t *);
 bool client_kill(client_t *);
 client_t *client_locate(const xcb_window_t);
+client_t *handle_window(xcb_window_t);
 
 void client_move(client_t *, const int16_t, const int16_t);
 void client_resize(client_t *, const uint16_t, const uint16_t);

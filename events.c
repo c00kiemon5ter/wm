@@ -58,28 +58,9 @@ void map_request(xcb_generic_event_t *evt)
 
     PRINTF("map request %u\n", e->window);
 
-    if (client_locate(e->window) || window_override_redirect(e->window) || ewmh_wm_type_ignored(e->window))
-        return;
-
-    client_t *c = client_create(e->window);
+    client_t *c = handle_window(e->window);
     if (!c)
-        err("failed to allocate client for window: %u\n", e->window);
-
-    PRINTF("client name: %s\n", c->title);
-    PRINTF("client win : %u\n", c->win);
-    PRINTF("client tags: %x\n", c->tags);
-    PRINTF("client tran: %s\n", BOOLSTR(c->is_floating));
-    PRINTF("client full: %s\n", BOOLSTR(c->is_fullscrn));
-    PRINTF("client x   : %u\n", c->geom.x);
-    PRINTF("client y   : %u\n", c->geom.y);
-    PRINTF("client w   : %u\n", c->geom.width);
-    PRINTF("client h   : %u\n", c->geom.height);
-
-    const uint32_t values[] = { XCB_EVENT_MASK_PROPERTY_CHANGE };
-    xcb_change_window_attributes(cfg.conn, c->win, XCB_CW_EVENT_MASK, values);
-
-    /* FIXME apply_rules(c); */
-    client_add(c);
+        return;
 
     if (IS_VISIBLE(c)) {
         tile(c->mon);
