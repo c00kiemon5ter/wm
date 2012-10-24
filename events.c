@@ -157,36 +157,41 @@ void destroy_notify(xcb_generic_event_t *evt)
     remove_client(e->window);
 }
 
-void rec(unsigned int button, int x, int y)
+/**
+ * draws and clears a rectangle
+ * representing the position of
+ * the moved or resized window.
+ */
+void stage_window(unsigned int button, int x, int y)
 {
-    static xcb_rectangle_t curr;
-    static int butt;
+    static xcb_rectangle_t rectangle;
+    static unsigned int butt;
 
-    xcb_gcontext_t gc = xcb_generate_id(cfg.conn);
-    int mask = XCB_GC_FUNCTION | XCB_GC_LINE_WIDTH | XCB_GC_SUBWINDOW_MODE;
-    uint32_t values[] = { XCB_GX_INVERT, 8, XCB_SUBWINDOW_MODE_INCLUDE_INFERIORS };
+    const xcb_gcontext_t gc = xcb_generate_id(cfg.conn);
+    const uint32_t mask = XCB_GC_FUNCTION | XCB_GC_LINE_WIDTH | XCB_GC_SUBWINDOW_MODE;
+    const uint32_t values[] = { XCB_GX_INVERT, 8, XCB_SUBWINDOW_MODE_INCLUDE_INFERIORS };
     xcb_create_gc(cfg.conn, gc, cfg.screen->root, mask, values);
 
     if (button != XCB_NONE)
         butt = button;
     else /* clear previous rectangle */
-        xcb_poly_rectangle(cfg.conn, cfg.screen->root, gc, 1, &curr);
+        xcb_poly_rectangle(cfg.conn, cfg.screen->root, gc, 1, &rectangle);
 
-    curr = cfg.client_cur->geom;
+    rectangle = cfg.client_cur->geom;
 
     switch (butt) {
         case BUTTON_MOVE:
-            curr.x = x - cfg.client_cur->geom.x;
-            curr.y = y - cfg.client_cur->geom.y;
+            rectangle.x = x - cfg.client_cur->geom.x;
+            rectangle.y = y - cfg.client_cur->geom.y;
             break;
         case BUTTON_RESIZE:
-            curr.width  = x + cfg.client_cur->geom.width;
-            curr.height = y + cfg.client_cur->geom.height;
+            rectangle.width  = x + cfg.client_cur->geom.width;
+            rectangle.height = y + cfg.client_cur->geom.height;
             break;
     }
 
     /* draw new rectangle */
-    xcb_poly_rectangle(cfg.conn, cfg.screen->root, gc, 1, &curr);
+    xcb_poly_rectangle(cfg.conn, cfg.screen->root, gc, 1, &rectangle);
 }
 
 void button_press(xcb_generic_event_t *evt)
@@ -214,7 +219,7 @@ void button_press(xcb_generic_event_t *evt)
             c->geom.height = c->geom.height - e->root_y;
             break;
     }
-    rec(e->detail, e->root_x, e->root_y);
+    stage_window(e->detail, e->root_x, e->root_y);
 
     if (!window_grab_pointer(window_get_pointer(POINTER_TCORSS)))
         warn("failed to grab pointer over window: %u\n", c->win);
@@ -227,7 +232,7 @@ void button_release(xcb_generic_event_t *evt)
     PRINTF("button '%u' released on event '%u' child '%u' at root (%d,%d) event (%d,%d) with state: %u\n",
             e->detail, e->event, e->child, e->root_x, e->root_y, e->event_x, e->event_y, e->state);
 
-    rec(e->detail, e->root_x, e->root_y);
+    stage_window(e->detail, e->root_x, e->root_y);
     switch (e->detail) {
         case BUTTON_MOVE:
             client_move(cfg.client_cur, e->root_x - cfg.client_cur->geom.x, e->root_y - cfg.client_cur->geom.y);
@@ -252,7 +257,7 @@ void motion_notify(xcb_generic_event_t *evt)
         tile(cfg.client_cur->mon);
     }
 
-    rec(XCB_NONE, e->root_x, e->root_y);
+    stage_window(XCB_NONE, e->root_x, e->root_y);
 }
 
 /**
