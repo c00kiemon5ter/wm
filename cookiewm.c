@@ -220,6 +220,13 @@ void quit(void)
 
 void cleanup(void)
 {
+    cfg.client_cur = cfg.clients;
+    while (cfg.client_cur) {
+        client_t *next = cfg.client_cur->next;
+        free(cfg.client_cur);
+        cfg.client_cur = next;
+    }
+
     cfg.monitor_cur = cfg.monitors;
     while (cfg.monitor_cur) {
         monitor_t *next = cfg.monitor_cur->next;
