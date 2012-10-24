@@ -7,14 +7,18 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
+#include <xcb/xcb.h>
+
 #include "cookiewm.h"
 #include "global.h"
 #include "helpers.h"
 #include "common.h"
-#include "screen.h"
-#include "ewmh.h"
 #include "events.h"
 #include "messages.h"
+#include "screen.h"
+#include "window.h"
+#include "ewmh.h"
+#include "tile.h"
 
 struct configuration cfg = { 0, 0, 0, 0, 0, { { 0 } }, 0, 0, 0, 0 };
 
@@ -103,6 +107,42 @@ void init_wm(void)
 }
 
 /**
+ * scan for already mapped windows
+ * grab and handle them
+ */
+void scan_orphans(void)
+{
+    const xcb_query_tree_cookie_t cookie = xcb_query_tree_unchecked(cfg.conn, cfg.screen->root);
+    xcb_query_tree_reply_t *reply = xcb_query_tree_reply(cfg.conn, cookie, (void *)0);
+
+    if (!reply)
+        return;
+
+    int children = xcb_query_tree_children_length(reply);
+    xcb_window_t *windows = xcb_query_tree_children(reply);
+
+    PRINTF("found '%d' orphans\n", children);
+
+    for (int child = 0; child < children; child++) {
+        PRINTF("checking orphan window: %u\n", windows[child]);
+
+        const xcb_get_window_attributes_cookie_t cookie = xcb_get_window_attributes_unchecked(cfg.conn, windows[child]);
+        xcb_get_window_attributes_reply_t *reply = xcb_get_window_attributes_reply(cfg.conn, cookie, (void *)0);
+        if (reply && reply->map_state == XCB_MAP_STATE_VIEWABLE) {
+            PRINTF("handling orphan window: %u\n", windows[child]);
+
+            handle_window(windows[child]);
+            free(reply);
+        }
+    }
+
+    if (children)
+        tile(cfg.monitor_cur);
+
+    free(reply);
+}
+
+/**
  * check if a new event arrived
  * and handle the event
  */
@@ -176,20 +216,8 @@ void quit(void)
     cfg.running = false;
 }
 
-int main(void)
+void cleanup(void)
 {
-    int dpy_fd = 0, sock_fd = 0;
-    cfg.running = true;
-
-    /* initialization */
-    init_xcb(&dpy_fd);
-    init_socket(&sock_fd);
-    init_wm();
-
-    /* main loop */
-    wait_event_or_message(dpy_fd, sock_fd);
-
-    /* cleanup */
     cfg.monitor_cur = cfg.monitors;
     while (cfg.monitor_cur) {
         monitor_t *next = cfg.monitor_cur->next;
@@ -203,6 +231,26 @@ int main(void)
 
     xcb_flush(cfg.conn);
     xcb_disconnect(cfg.conn);
+}
+
+int main(void)
+{
+    int dpy_fd = 0, sock_fd = 0;
+    cfg.running = true;
+
+    /* initialization */
+    init_xcb(&dpy_fd);
+    init_socket(&sock_fd);
+    init_wm();
+
+    /* handle existing windows */
+    scan_orphans();
+
+    /* main loop */
+    wait_event_or_message(dpy_fd, sock_fd);
+
+    /* cleanup */
+    cleanup();
 
     if (dpy_fd)
         close(dpy_fd);
