@@ -157,6 +157,8 @@ void tile(const monitor_t *mon)
     if (!num_windows)
         return;
 
+    PRINTF("found '%u' windows on monitor\n", num_windows);
+
     /* if a single window then maximize it */
     if (num_windows == 1) {
         monocle(mon, num_windows);

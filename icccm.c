@@ -89,10 +89,6 @@ bool icccm_get_window_title(const xcb_window_t win, char *name)
     memcpy(name, data.name, len);
     name[len] = 0;
 
-    PRINTF("Title strlen: %u\n", data.name_len);
-    PRINTF("Title string: %s\n", data.name);
-    PRINTF("Title name  : %s\n", name);
-
     xcb_icccm_get_text_property_reply_wipe(&data);
 
     return true;

@@ -56,10 +56,6 @@ bool ewmh_get_window_title(const xcb_window_t win, char *name)
     memcpy(name, data.strings, len);
     name[len] = 0;
 
-    PRINTF("Title strlen: %u\n", data.strings_len);
-    PRINTF("Title string: %s\n", data.strings);
-    PRINTF("Title name  : %s\n", name);
-
     xcb_ewmh_get_utf8_strings_reply_wipe(&data);
 
     return true;
