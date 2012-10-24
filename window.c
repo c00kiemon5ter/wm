@@ -150,8 +150,6 @@ bool client_kill(client_t *c)
     if (!state)
         xcb_kill_client(cfg.conn, c->win);
 
-    xcb_flush(cfg.conn);
-
     return state;
 }
 

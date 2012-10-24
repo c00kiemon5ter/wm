@@ -200,6 +200,8 @@ static void wait_event_or_message(const int dpy_fd, const int sock_fd)
     const int sel = max(sock_fd, dpy_fd) + 1;
 
     while (cfg.running) {
+        xcb_flush(cfg.conn);
+
         FD_ZERO(&fds);
         FD_SET(sock_fd, &fds);
         FD_SET(dpy_fd, &fds);
@@ -229,7 +231,6 @@ void cleanup(void)
     if (cfg.ewmh)
         free(cfg.ewmh);
 
-    xcb_flush(cfg.conn);
     xcb_disconnect(cfg.conn);
 }
 

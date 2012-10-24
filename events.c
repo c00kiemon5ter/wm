@@ -288,6 +288,5 @@ void handle_event(xcb_generic_event_t *evt)
         case XCB_MOTION_NOTIFY:     motion_notify(evt);     break;
         default:                    /* not handled */       break;
     }
-    xcb_flush(cfg.conn);
 }
 
