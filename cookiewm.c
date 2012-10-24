@@ -190,6 +190,13 @@ int main(void)
     wait_event_or_message(dpy_fd, sock_fd);
 
     /* cleanup */
+    cfg.monitor_cur = cfg.monitors;
+    while (cfg.monitor_cur) {
+        monitor_t *next = cfg.monitor_cur->next;
+        free(cfg.monitor_cur);
+        cfg.monitor_cur = next;
+    }
+
     xcb_ewmh_connection_wipe(cfg.ewmh);
     if (cfg.ewmh)
         free(cfg.ewmh);
