@@ -10,7 +10,7 @@ xcb_atom_t get_atom(const char *atom_name)
 {
     xcb_atom_t atom = 0;
 
-    xcb_intern_atom_cookie_t cookie = xcb_intern_atom_unchecked(cfg.conn, 0, strlen(atom_name), atom_name);
+    const xcb_intern_atom_cookie_t cookie = xcb_intern_atom_unchecked(cfg.conn, 0, strlen(atom_name), atom_name);
     xcb_intern_atom_reply_t *reply = xcb_intern_atom_reply(cfg.conn, cookie, (void *)0);
 
     if (!reply)
@@ -58,7 +58,26 @@ bool icccm_close_window(const xcb_window_t win)
     return state;
 }
 
-bool icccm_get_window_name(const xcb_window_t win, char *name)
+bool icccm_get_window_class(const xcb_window_t win, char *class, char *instance)
+{
+    const xcb_get_property_cookie_t cookie = xcb_icccm_get_wm_class_unchecked(cfg.conn, win);
+    xcb_icccm_get_wm_class_reply_t data;
+
+    if (!xcb_icccm_get_wm_class_reply(cfg.conn, cookie, &data, (void *)0))
+        return false;
+
+    snprintf(class, sizeof(class), "%s", data.class_name);
+    snprintf(instance, sizeof(instance), "%s", data.instance_name);
+
+    PRINTF("Class string: %s\n", data.class_name);
+    PRINTF("Instance str: %s\n", data.instance_name);
+
+    xcb_icccm_get_wm_class_reply_wipe(&data);
+
+    return true;
+}
+
+bool icccm_get_window_title(const xcb_window_t win, char *name)
 {
     const xcb_get_property_cookie_t cookie = xcb_icccm_get_wm_name_unchecked(cfg.conn, win);
     xcb_icccm_get_text_property_reply_t data;

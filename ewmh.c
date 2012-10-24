@@ -44,7 +44,7 @@ void ewmh_update_wm_name(const char *wm_name)
     xcb_ewmh_set_wm_name(cfg.ewmh, cfg.screen->root, strlen(wm_name), wm_name);
 }
 
-bool ewmh_get_window_name(const xcb_window_t win, char *name)
+bool ewmh_get_window_title(const xcb_window_t win, char *name)
 {
     const xcb_get_property_cookie_t cookie = xcb_ewmh_get_wm_name_unchecked(cfg.ewmh, win);
     xcb_ewmh_get_utf8_strings_reply_t data;

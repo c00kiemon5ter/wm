@@ -65,7 +65,7 @@ void map_request(xcb_generic_event_t *evt)
     if (!c)
         err("failed to allocate client for window: %u\n", e->window);
 
-    PRINTF("client name: %s\n", c->name);
+    PRINTF("client name: %s\n", c->title);
     PRINTF("client win : %u\n", c->win);
     PRINTF("client tags: %x\n", c->tags);
     PRINTF("client tran: %s\n", BOOLSTR(c->is_floating));

@@ -31,7 +31,7 @@ typedef enum {
 } layout_t;
 
 /**
- * A monitor
+ * a monitor
  *
  * geom   - the monitor geometry - x, y, width, height
  * tags   - bitmask with set bits the active tags on the monitor
@@ -50,7 +50,7 @@ typedef struct monitor_t {
 } monitor_t;
 
 /**
- * A client
+ * a client
  *
  * geom - the client geometry - x, y, width, height
  * tags - a bitmask with set bits the tags of the client
@@ -66,7 +66,7 @@ typedef struct monitor_t {
 typedef struct client_t {
     xcb_rectangle_t geom;
     uint16_t tags;
-    char name[BUF_NAME_LEN];
+    char title[BUF_NAME_LEN], class[BUF_NAME_LEN], instance[BUF_NAME_LEN];
     bool is_urgent, is_floating, is_fullscrn;
     xcb_window_t win;
     struct client_t *next;

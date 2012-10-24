@@ -88,9 +88,12 @@ client_t *client_create(const xcb_window_t win)
 
     window_update_geom(win, &c->geom);
 
-    if (!ewmh_get_window_name(win, c->name) &&
-        !icccm_get_window_name(win, c->name))
-        snprintf(c->name, sizeof(c->name), "%s", WINDOW_NO_NAME);
+    if (!icccm_get_window_class(win, c->class, c->instance))
+        warn("failed to get class and instance name for client: %u\n", win);
+
+    if (!ewmh_get_window_title(win, c->title) &&
+        !icccm_get_window_title(win, c->title))
+        snprintf(c->title, sizeof(c->title), "%s", WINDOW_NO_NAME);
 
     c->next = (void *)0;
 
@@ -256,8 +259,8 @@ void window_set_border_width(xcb_window_t win, const uint16_t border_width)
 
 bool window_grab_pointer(xcb_cursor_t cursor)
 {
-    xcb_grab_pointer_cookie_t cookie = xcb_grab_pointer_unchecked(cfg.conn, false, cfg.screen->root, POINTER_GRAB_MASK,
-                                        XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC, XCB_NONE, cursor, XCB_CURRENT_TIME);
+    const xcb_grab_pointer_cookie_t cookie = xcb_grab_pointer_unchecked(cfg.conn, false, cfg.screen->root, POINTER_GRAB_MASK,
+                                                XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC, XCB_NONE, cursor, XCB_CURRENT_TIME);
     xcb_grab_pointer_reply_t *reply = xcb_grab_pointer_reply(cfg.conn, cookie, (void *)0);
 
     xcb_free_cursor(cfg.conn, cursor);
