@@ -9,7 +9,7 @@
 
 bool randr(void)
 {
-    if (!xcb_get_extension_data(cfg.conn, &xcb_xinerama_id)->present) {
+    if (!xcb_get_extension_data(cfg.conn, &xcb_randr_id)->present) {
         warn("randr is not present\n");
         return false;
     }
@@ -22,20 +22,45 @@ bool randr(void)
 
     const xcb_randr_crtc_t *info = xcb_randr_get_screen_resources_crtcs(reply);
 
-    PRINTF("randr num crtcs: %u\n", reply->num_crtcs);
-
     monitor_t **m = &cfg.monitors;
+
+    PRINTF("randr num crtcs: %u\n", reply->num_crtcs);
 
     for (uint16_t crtc = 0; crtc < reply->num_crtcs; crtc++) {
         const xcb_randr_get_crtc_info_cookie_t cookie = xcb_randr_get_crtc_info_unchecked(cfg.conn, info[crtc], XCB_CURRENT_TIME);
         xcb_randr_get_crtc_info_reply_t *reply = xcb_randr_get_crtc_info_reply(cfg.conn, cookie, (void *)0);
 
         if (!reply)
-            break;
-
-        /* if crtc not associated with any monitor, skip it */
-        if (xcb_randr_get_crtc_info_outputs_length(reply) == 0)
             continue;
+
+        // xcb_randr_output_t *info = xcb_randr_get_crtc_info_outputs(reply);
+        // int outputs = xcb_randr_get_crtc_info_outputs_length(reply);
+        //
+        // /* if crtc not associated with any monitor, skip it */
+        // if (outputs == 0) {
+        //     free(reply);
+        //     continue;
+        // }
+        //
+        // PRINTF("outputs: %d\n", outputs);
+        //
+        // for (int output = 0; output < outputs; output++) {
+        //     const xcb_randr_get_output_info_cookie_t cookie = xcb_randr_get_output_info_unchecked(cfg.conn, info[output], XCB_CURRENT_TIME);
+        //     xcb_randr_get_output_info_reply_t *reply = xcb_randr_get_output_info_reply(cfg.conn, cookie, (void *)0);
+        //
+        //     if (!reply)
+        //         continue;
+        //
+        //     size_t name_len = xcb_randr_get_output_info_name_length(reply) + 1;
+        //     char name[BUFLEN];
+        //     snprintf(name, MIN(name_len, sizeof(name)), "%s", xcb_randr_get_output_info_name(reply));
+        //
+        //     PRINTF("info for output: %d -- %s\n", output, name);
+        //     PRINTF("mm_width : %5u\n", reply->mm_width);
+        //     PRINTF("mm_height: %5u\n", reply->mm_height);
+        //
+        //     free(reply);
+        // }
 
         if (!(*m = calloc(1, sizeof(monitor_t))))
             err("failed to allocate crtc: %u\n", crtc);
@@ -52,29 +77,6 @@ bool randr(void)
         PRINTF("h: %5u\n", (*m)->geom.height);
 
         m = &(*m)->next;
-
-        // xcb_randr_output_t *info = xcb_randr_get_crtc_info_outputs(reply);
-        // int outputs = xcb_randr_get_crtc_info_outputs_length(reply);
-        //
-        // PRINTF("outputs: %d\n", outputs);
-        //
-        // for (int output = 0; output < outputs; output++) {
-        //     const xcb_randr_get_output_info_cookie_t cookie = xcb_randr_get_output_info_unchecked(cfg.conn, info[output], XCB_CURRENT_TIME);
-        //     xcb_randr_get_output_info_reply_t *reply = xcb_randr_get_output_info_reply(cfg.conn, cookie, (void *)0);
-        //
-        //     if (!reply)
-        //         break;
-        //
-        //     size_t name_len = xcb_randr_get_output_info_name_length(reply) + 1;
-        //     char name[BUFLEN];
-        //     snprintf(name, MIN(name_len, sizeof(name)), "%s", xcb_randr_get_output_info_name(reply));
-        //
-        //     PRINTF("info for output: %d -- %s\n", output, name);
-        //     PRINTF("mm_width : %5u\n", reply->mm_width);
-        //     PRINTF("mm_height: %5u\n", reply->mm_height);
-        //
-        //     free(reply);
-        // }
 
         free(reply);
     }
