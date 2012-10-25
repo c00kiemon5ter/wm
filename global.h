@@ -74,6 +74,21 @@ typedef struct client_t {
 } client_t;
 
 /**
+ * a rule
+ *
+ * defines to which window the rule applies
+ * by setting its class or instance name
+ * and whether the window is floating
+ *
+ * TODO consider monitor and follow
+ */
+typedef struct rule_t {
+    char class_instance[BUF_NAME_LEN];
+    bool is_floating;
+    struct rule_t *next;
+} rule_t;
+
+/**
  * global shared variables
  *
  * running      - state of the window manager
@@ -82,10 +97,11 @@ typedef struct client_t {
  * conx         - the connection to the X server
  * ewmh         - connection to manage ewmh
  * tag_names    - array with tag names
+ * rules        - list of set rules
  * monitors     - list of available monitors
  * clients      - list of all managed clients
- * cur_client   - the current, active and focused client
- * cur_mon      - the current, active and focused monitor
+ * client_cur   - the current, active and focused client
+ * monitor_cur  - the current, active and focused monitor
  */
 struct configuration {
     bool running;
@@ -94,6 +110,7 @@ struct configuration {
     xcb_connection_t *conn;
     xcb_ewmh_connection_t *ewmh;
     char tag_names[sizeof(uint16_t) * CHAR_BIT][BUF_NAME_LEN];
+    rule_t *rules;
     monitor_t *monitors;
     client_t *clients;
     client_t *client_cur;

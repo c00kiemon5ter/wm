@@ -2,6 +2,7 @@
 
 #include "window.h"
 #include "helpers.h"
+#include "rules.h"
 #include "ewmh.h"
 #include "icccm.h"
 
@@ -141,7 +142,7 @@ client_t *handle_window(const xcb_window_t win)
     const uint32_t values[] = { XCB_EVENT_MASK_PROPERTY_CHANGE };
     xcb_change_window_attributes(cfg.conn, win, XCB_CW_EVENT_MASK, values);
 
-    /* FIXME apply_rules(c); */
+    rules_apply(c);
     client_add(c);
 
     return c;

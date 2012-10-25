@@ -19,7 +19,7 @@
 #include "ewmh.h"
 #include "tile.h"
 
-struct configuration cfg = { 0, 0, 0, 0, 0, { { 0 } }, 0, 0, 0, 0 };
+struct configuration cfg = { 0, 0, 0, 0, 0, { { 0 } }, 0, 0, 0, 0, 0 };
 
 /**
  * setup server connection

@@ -32,7 +32,6 @@ union overlay {
 | TO.DO |
 +-------+
 
-rules struct and checks
 messages interface
 focus mechanism
 update ewmh info (desktops, client list etc)
