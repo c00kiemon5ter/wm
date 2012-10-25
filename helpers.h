@@ -2,9 +2,9 @@
 #define HELPERS_H
 
 #include <stdio.h>
-#include <stdint.h>
 #include <stdarg.h>
 #include <limits.h>
+#include <stdint.h>
 
 #include <xcb/xcb.h>
 
@@ -35,7 +35,5 @@ uintmax_t min(uintmax_t, uintmax_t);
 
 void err(char *, ...) __attribute__((noreturn));
 void warn(char *, ...);
-
-uint32_t get_color(char *);
 
 #endif

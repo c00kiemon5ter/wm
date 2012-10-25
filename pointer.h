@@ -1,8 +1,8 @@
 #ifndef POINTER_H
 #define POINTER_H
 
-#include <stdbool.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #define POINTER_DEFAULT     68
 #define POINTER_TCORSS      130

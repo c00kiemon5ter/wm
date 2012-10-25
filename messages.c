@@ -1,10 +1,14 @@
 #include <string.h>
 
 #include "messages.h"
-#include "cookiewm.h"
 #include "helpers.h"
 #include "window.h"
 #include "tile.h"
+
+void quit(void)
+{
+    cfg.running = false;
+}
 
 void process_message(char *msg, char *rsp)
 {

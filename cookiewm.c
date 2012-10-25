@@ -9,7 +9,6 @@
 
 #include <xcb/xcb.h>
 
-#include "cookiewm.h"
 #include "global.h"
 #include "helpers.h"
 #include "common.h"
@@ -211,11 +210,6 @@ static void wait_event_or_message(const int dpy_fd, const int sock_fd)
             check_event(dpy_fd, &fds);
         }
     }
-}
-
-void quit(void)
-{
-    cfg.running = false;
 }
 
 void cleanup(void)

@@ -2,8 +2,8 @@
 #define GLOBAL_H
 
 #include <limits.h>
-#include <stdbool.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
