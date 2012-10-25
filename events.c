@@ -4,7 +4,7 @@
 #include "global.h"
 #include "helpers.h"
 #include "window.h"
-#include "ewmh.h"
+#include "pointer.h"
 #include "tile.h"
 
 void configure_request(xcb_generic_event_t *evt)

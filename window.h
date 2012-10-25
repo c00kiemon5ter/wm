@@ -8,9 +8,6 @@
 
 #include "global.h"
 
-#define POINTER_DEFAULT     68
-#define POINTER_TCORSS      130
-
 client_t *client_create(const xcb_window_t);
 void client_add(client_t *);
 void client_unlink(client_t *);
@@ -31,9 +28,5 @@ void window_set_border_width(const xcb_window_t, const uint16_t);
 
 void window_show(const xcb_window_t);
 void window_hide(const xcb_window_t);
-
-bool window_grab_pointer(xcb_cursor_t);
-void window_ungrab_pointer(void);
-xcb_cursor_t window_get_pointer(const uint16_t);
 
 #endif
