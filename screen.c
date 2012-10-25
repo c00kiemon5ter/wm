@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdint.h>
 
 #include <xcb/randr.h>
 #include <xcb/xinerama.h>
@@ -6,6 +7,22 @@
 #include "screen.h"
 #include "global.h"
 #include "helpers.h"
+
+void monitor_add(int16_t x, int16_t y, uint16_t w, uint16_t h)
+{
+    monitor_t **m = &cfg.monitors;
+    while (*m) m = &(*m)->next;
+
+    if (!(*m = calloc(1, sizeof(monitor_t))))
+        err("failed to allocate monitor\n");
+
+    (*m)->geom = (const xcb_rectangle_t){ .x = x, .y = y, .width = w, .height = h };
+
+    PRINTF("x: %5d\n", (*m)->geom.x);
+    PRINTF("y: %5d\n", (*m)->geom.y);
+    PRINTF("w: %5u\n", (*m)->geom.width);
+    PRINTF("h: %5u\n", (*m)->geom.height);
+}
 
 bool randr(void)
 {
@@ -21,8 +38,6 @@ bool randr(void)
         return false;
 
     const xcb_randr_crtc_t *info = xcb_randr_get_screen_resources_crtcs(reply);
-
-    monitor_t **m = &cfg.monitors;
 
     PRINTF("randr num crtcs: %u\n", reply->num_crtcs);
 
@@ -62,21 +77,8 @@ bool randr(void)
         //     free(reply);
         // }
 
-        if (!(*m = calloc(1, sizeof(monitor_t))))
-            err("failed to allocate crtc: %u\n", crtc);
-
-        (*m)->geom.x = reply->x;
-        (*m)->geom.y = reply->y;
-        (*m)->geom.width  = reply->width;
-        (*m)->geom.height = reply->height;
-
-        PRINTF("info for crtc: %u\n", crtc);
-        PRINTF("x: %5d\n", (*m)->geom.x);
-        PRINTF("y: %5d\n", (*m)->geom.y);
-        PRINTF("w: %5u\n", (*m)->geom.width);
-        PRINTF("h: %5u\n", (*m)->geom.height);
-
-        m = &(*m)->next;
+        PRINTF("adding crtc: %u\n", crtc);
+        monitor_add(reply->x, reply->y, reply->width, reply->height);
 
         free(reply);
     }
@@ -116,24 +118,9 @@ bool xinerama(void)
 
     PRINTF("xinerama screens: %d\n", screens);
 
-    monitor_t **m = &cfg.monitors;
-
     for (int screen = 0; screen < screens; screen++) {
-        if (!(*m = calloc(1, sizeof(monitor_t))))
-            err("failed to allocate crtc: %d\n", screen);
-
-        (*m)->geom.x = info[screen].x_org;
-        (*m)->geom.y = info[screen].y_org;
-        (*m)->geom.width  = info[screen].width;
-        (*m)->geom.height = info[screen].height;
-
-        PRINTF("info for screen: %d\n", screen);
-        PRINTF("x: %5d\n", (*m)->geom.x);
-        PRINTF("y: %5d\n", (*m)->geom.y);
-        PRINTF("w: %5u\n", (*m)->geom.width);
-        PRINTF("h: %5u\n", (*m)->geom.height);
-
-        m = &(*m)->next;
+        PRINTF("adding screen: %d\n", screen);
+        monitor_add(info[screen].x_org, info[screen].y_org, info[screen].width, info[screen].height);
     }
 
     free(reply);
@@ -143,19 +130,6 @@ bool xinerama(void)
 
 void zaphod(void)
 {
-    if (!(cfg.monitors = calloc(1, sizeof(monitor_t))))
-        err("failed to allocate monitor\n");
-
-    cfg.monitors->geom.x = 0;
-    cfg.monitors->geom.y = 0;
-    cfg.monitors->geom.width  = cfg.screen->width_in_pixels;
-    cfg.monitors->geom.height = cfg.screen->height_in_pixels;
-
-    PRINTF("info for monitor: %d\n", 1);
-    PRINTF("x: %5d\n", cfg.monitors->geom.x);
-    PRINTF("y: %5d\n", cfg.monitors->geom.y);
-    PRINTF("w: %5u\n", cfg.monitors->geom.width);
-    PRINTF("h: %5u\n", cfg.monitors->geom.height);
-
+    monitor_add(0, 0, cfg.screen->width_in_pixels, cfg.screen->height_in_pixels);
 }
 
