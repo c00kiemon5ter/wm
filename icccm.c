@@ -3,8 +3,8 @@
 #include <xcb/xcb_icccm.h>
 
 #include "global.h"
-#include "helpers.h"
 #include "icccm.h"
+#include "helpers.h"
 
 xcb_atom_t get_atom(const char *atom_name)
 {
@@ -69,9 +69,6 @@ bool icccm_get_window_class(const xcb_window_t win, char *class, char *instance)
     snprintf(class, sizeof(class), "%s", data.class_name);
     snprintf(instance, sizeof(instance), "%s", data.instance_name);
 
-    PRINTF("Class string: %s\n", data.class_name);
-    PRINTF("Instance str: %s\n", data.instance_name);
-
     xcb_icccm_get_wm_class_reply_wipe(&data);
 
     return true;
@@ -114,6 +111,7 @@ bool icccm_has_urgent_hint(const xcb_window_t win)
     if (!xcb_icccm_get_wm_hints_reply(cfg.conn, cookie, &data, (void *)0))
         return state;
 
+    /* FIXME needs testing - what works here ? */
     state = data.flags & XCB_ICCCM_WM_HINT_X_URGENCY;
     PRINTF("state is: %s\n", BOOLSTR(state));
 

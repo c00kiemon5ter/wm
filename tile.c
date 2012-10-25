@@ -173,6 +173,5 @@ void tile(const monitor_t *mon)
         case FLOAT:     /* do not handle */         break;
         default: PRINTF("unknown layout: %d\n", mon->mode); break;
     }
-    PRINTF("count of windows that match tag '%u' : %u\n", mon->tags, num_windows);
 }
 
