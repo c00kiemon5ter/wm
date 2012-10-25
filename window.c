@@ -270,12 +270,17 @@ void window_set_visibility(const xcb_window_t win, bool visible)
 {
     uint32_t values_off[] = { ROOT_EVENT_MASK & ~XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY };
     uint32_t values_on[]  = { ROOT_EVENT_MASK };
+
+    xcb_grab_server(cfg.conn);
+
     xcb_change_window_attributes(cfg.conn, cfg.screen->root, XCB_CW_EVENT_MASK, values_off);
     if (visible)
         xcb_map_window(cfg.conn, win);
     else
         xcb_unmap_window(cfg.conn, win);
     xcb_change_window_attributes(cfg.conn, cfg.screen->root, XCB_CW_EVENT_MASK, values_on);
+
+    xcb_ungrab_server(cfg.conn);
 }
 
 inline
