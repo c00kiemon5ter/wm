@@ -9,9 +9,18 @@
 #include "global.h"
 
 client_t *client_create(const xcb_window_t);
-void client_add(client_t *);
+
+void client_link_head(client_t *);
+void client_link_tail(client_t *);
+void client_flink(client_t *);
+
+void client_vunlink(client_t *);
+void client_funlink(client_t *);
 void client_unlink(client_t *);
+
+void client_focus(client_t *);
 bool client_kill(client_t *);
+
 client_t *client_locate(const xcb_window_t);
 client_t *handle_window(const xcb_window_t);
 

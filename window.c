@@ -5,6 +5,7 @@
 #include "rules.h"
 #include "ewmh.h"
 #include "icccm.h"
+#include "screen.h"
 
 #define WINDOW_NO_NAME                  "no name"
 #define CONFIG_WINDOW_MOVE              XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y
@@ -24,9 +25,9 @@ client_t *client_create(const xcb_window_t win)
         return false;
 
     c->win = win;
-    c->mon = cfg.monitor_cur;
+    c->mon = cfg.monitors;
 
-    BITMASK_SET(c->tags, cfg.monitor_cur->tags);
+    BITMASK_SET(c->tags, cfg.monitors->tags);
 
     c->is_fullscrn = ewmh_wm_state_fullscreen(win);
     c->is_floating = icccm_is_transient(win) || ewmh_wm_type_dialog(win);
@@ -41,39 +42,104 @@ client_t *client_create(const xcb_window_t win)
         !icccm_get_window_title(win, c->title))
         snprintf(c->title, sizeof(c->title), "%s", WINDOW_NO_NAME);
 
-    c->next = (void *)0;
+    c->vnext = (void *)0;
+    c->fnext = (void *)0;
 
     return c;
 }
 
 /**
- * add given client to the end of the clients list
+ * add given client to head of clients visual list
  */
-void client_add(client_t *c)
+void client_link_head(client_t *c)
 {
-    PRINTF("adding client to end of list: %u\n", c->win);
+    PRINTF("linking client to head of vlist: %u\n", c->win);
 
-    client_t **last = &cfg.clients;
-    while (*last) last = &(*last)->next;
+    c->vnext = cfg.vlist;
+    cfg.vlist = c;
+}
+
+/**
+ * add given client to end of clients visual list
+ */
+void client_link_tail(client_t *c)
+{
+    PRINTF("linking client to end of vlist: %u\n", c->win);
+
+    client_t **last = &cfg.vlist;
+    while (*last) last = &(*last)->vnext;
     *last = c;
+}
+
+/**
+ * add given client to head of clients focus list
+ */
+void client_flink(client_t *c)
+{
+    PRINTF("linking client to focus list: %u\n", c->win);
+
+    c->fnext = cfg.flist;
+    cfg.flist = c;
+}
+
+/**
+ * remove given client from the clients visual list
+ */
+void client_vunlink(client_t *c)
+{
+    PRINTF("unlinking client from visual list: %u\n", c->win);
+
+    client_t **p = &cfg.vlist;
+    while (*p && *p != c) p = &(*p)->vnext;
+    *p = c->vnext;
+    c->vnext = (void *)0;
+
+    PRINTF("vp is now: %u\n", (*p) ? (*p)->win : 0);
+}
+
+/**
+ * remove given client from the clients focus list
+ */
+void client_funlink(client_t *c)
+{
+    PRINTF("unlinking client from focus list: %u\n", c->win);
+
+    client_t **p = &cfg.flist;
+    while (*p && *p != c) p = &(*p)->fnext;
+    *p = c->fnext;
+    c->fnext = (void *)0;
+
+    PRINTF("fp is now: %u\n", (*p) ? (*p)->win : 0);
 }
 
 /**
  * remove given client from the clients list
  */
+inline
 void client_unlink(client_t *c)
 {
     PRINTF("unlinking client from client list: %u\n", c->win);
 
-    client_t **p = &cfg.clients;
-    for (; *p && *p != c; p = &(*p)->next);
+    client_vunlink(c);
+    client_funlink(c);
+}
 
-    if (!*p) return;
+/**
+ * focus the given client
+ * make the clients monitor the current monitor
+ */
+void client_focus(client_t *c)
+{
+    PRINTF("focusing client: %u\n", c->win);
 
-    *p = c->next;
-    c->next = (void *)0;
+    if (!c || cfg.flist == c)
+        return;
 
-    PRINTF("p is now: %u\n", (*p) ? (*p)->win : 0);
+    client_funlink(c);
+    client_flink(c);
+    monitor_focus(c->mon);
+
+    PRINTF("focused client is: %u\n", c->win);
 }
 
 /**
@@ -91,12 +157,14 @@ bool client_kill(client_t *c)
 {
     PRINTF("killing client: %u\n", c->win);
 
-    bool state = icccm_close_window(c->win);
+    if (icccm_close_window(c->win))
+        return true;
 
-    if (!state)
-        xcb_kill_client(cfg.conn, c->win);
+    xcb_kill_client(cfg.conn, c->win);
+    client_unlink(cfg.flist);
+    free(cfg.flist);
 
-    return state;
+    return false;
 }
 
 /**
@@ -104,7 +172,7 @@ bool client_kill(client_t *c)
  */
 client_t *client_locate(const xcb_window_t win)
 {
-    for (client_t **c = &cfg.clients; *c; c = &(*c)->next)
+    for (client_t **c = &cfg.vlist; *c; c = &(*c)->vnext)
         if ((*c)->win == win) {
             PRINTF("found client for window: %u\n", win);
             return *c;
@@ -143,7 +211,7 @@ client_t *handle_window(const xcb_window_t win)
     xcb_change_window_attributes(cfg.conn, win, XCB_CW_EVENT_MASK, values);
 
     rules_apply(c);
-    client_add(c);
+    client_link_tail(c);
 
     return c;
 }

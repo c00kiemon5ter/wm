@@ -5,9 +5,11 @@
 #include <xcb/xinerama.h>
 
 #include "screen.h"
-#include "global.h"
 #include "helpers.h"
 
+/**
+ * add a new monitor to the tail of the monitor list
+ */
 void monitor_add(int16_t x, int16_t y, uint16_t w, uint16_t h)
 {
     monitor_t **m = &cfg.monitors;
@@ -22,6 +24,25 @@ void monitor_add(int16_t x, int16_t y, uint16_t w, uint16_t h)
     PRINTF("y: %5d\n", (*m)->geom.y);
     PRINTF("w: %5u\n", (*m)->geom.width);
     PRINTF("h: %5u\n", (*m)->geom.height);
+}
+
+/**
+ * focus the given monitor
+ *
+ * the focused/active monitor is always
+ * the first monitor on the monitor list
+ */
+void monitor_focus(monitor_t *mon)
+{
+    if (!mon || cfg.monitors == mon)
+        return;
+
+    monitor_t **m = &cfg.monitors;
+    while (*m && *m != mon) m = &(*m)->next;
+    *m = mon->next;
+
+    mon->next = cfg.monitors;
+    cfg.monitors = mon;
 }
 
 bool randr(void)
