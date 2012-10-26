@@ -16,7 +16,7 @@
  */
 void monocle(const monitor_t *mon, unsigned short wins)
 {
-    for (client_t *c = cfg.clients; c && wins; c = c->next)
+    for (client_t *c = cfg.vlist; c && wins; c = c->vnext)
         if (ON_MONITOR(mon, c) && IS_VISIBLE(c) && IS_TILED(c)) {
             client_move_resize_geom(c, mon->geom);
             --wins;
@@ -52,7 +52,7 @@ void grid(const monitor_t *mon, unsigned short wins)
     const uint16_t client_width  = mon->geom.width / (cols ? cols : 1);
     const uint16_t client_height = mon->geom.height;
 
-    for (client_t *c = cfg.clients; c && i < wins; c = c->next)
+    for (client_t *c = cfg.vlist; c && i < wins; c = c->vnext)
         if (ON_MONITOR(mon, c) && IS_VISIBLE(c) && IS_TILED(c)) {
             if (i++/rows + 1 > cols - n%cols)
                 rows = n/cols + 1;
@@ -81,13 +81,13 @@ void grid(const monitor_t *mon, unsigned short wins)
  */
 void vstack(const monitor_t *mon, unsigned short wins)
 {
-    client_t *c = cfg.clients;
+    client_t *c = cfg.vlist;
 
     /* place the first 'm_wins' windows in the master area */
     const uint16_t m_area = mon->geom.width * M_AREA_FACT + mon->m_area;
     const uint16_t m_wins = (wins <= mon->m_wins) ? wins - 1 : mon->m_wins;
 
-    for (unsigned short i = 0, m_h = mon->geom.height / m_wins; c && i < m_wins; c = c->next)
+    for (unsigned short i = 0, m_h = mon->geom.height / m_wins; c && i < m_wins; c = c->vnext)
         if (ON_MONITOR(mon, c) && IS_VISIBLE(c) && IS_TILED(c))
             client_move_resize(c, mon->geom.x, mon->geom.y + i++ * m_h, m_area, m_h);
 
@@ -98,7 +98,7 @@ void vstack(const monitor_t *mon, unsigned short wins)
     const uint16_t client_w = mon->geom.width - m_area;
     const uint16_t client_h = mon->geom.height / wins;
 
-    for (int16_t client_y = mon->geom.y; c && wins; c = c->next)
+    for (int16_t client_y = mon->geom.y; c && wins; c = c->vnext)
         if (ON_MONITOR(mon, c) && IS_VISIBLE(c) && IS_TILED(c)) {
             client_move_resize(c, client_x, client_y, client_w, client_h);
             client_y += client_h;
@@ -118,13 +118,13 @@ void vstack(const monitor_t *mon, unsigned short wins)
  */
 void hstack(const monitor_t *mon, unsigned short wins)
 {
-    client_t *c = cfg.clients;
+    client_t *c = cfg.vlist;
 
     /* place the first 'm_wins' windows in the master area */
     const uint16_t m_area = mon->geom.height * M_AREA_FACT + mon->m_area;
     const uint16_t m_wins = (wins <= mon->m_wins) ? wins - 1 : mon->m_wins;
 
-    for (unsigned short i = 0, m_w = mon->geom.width / m_wins; c && i < m_wins; c = c->next)
+    for (unsigned short i = 0, m_w = mon->geom.width / m_wins; c && i < m_wins; c = c->vnext)
         if (ON_MONITOR(mon, c) && IS_VISIBLE(c) && IS_TILED(c))
             client_move_resize(c, mon->geom.x + i++ * m_w, mon->geom.y, m_w, m_area);
 
@@ -135,7 +135,7 @@ void hstack(const monitor_t *mon, unsigned short wins)
     const uint16_t client_w = mon->geom.width / wins;
     const uint16_t client_h = mon->geom.height - m_area;
 
-    for (int16_t client_x = mon->geom.x; c && wins; c = c->next)
+    for (int16_t client_x = mon->geom.x; c && wins; c = c->vnext)
         if (ON_MONITOR(mon, c) && IS_VISIBLE(c) && IS_TILED(c)) {
             client_move_resize(c, client_x, client_y, client_w, client_h);
             client_x += client_w;
@@ -150,14 +150,14 @@ void hstack(const monitor_t *mon, unsigned short wins)
 void tile(const monitor_t *mon)
 {
     unsigned short num_windows = 0;
-    for (client_t *c = cfg.clients; c; c = c->next)
+    for (client_t *c = cfg.vlist; c; c = c->vnext)
         if (ON_MONITOR(mon, c) && IS_VISIBLE(c) && IS_TILED(c))
             ++num_windows;
 
     if (!num_windows)
         return;
 
-    PRINTF("found '%u' windows on monitor\n", num_windows);
+    PRINTF("found '%u' windows to tile on monitor\n", num_windows);
 
     /* if a single window then maximize it */
     if (num_windows == 1) {

@@ -59,14 +59,12 @@ void map_request(xcb_generic_event_t *evt)
     PRINTF("map request %u\n", e->window);
 
     client_t *c = handle_window(e->window);
-    if (!c)
+    if (!c || !IS_VISIBLE(c))
         return;
 
-    if (IS_VISIBLE(c)) {
-        tile(c->mon);
-        window_show(c->win);
-        cfg.client_cur = c;
-    }
+    window_show(c->win);
+    tile(c->mon);
+    client_focus(c);
 }
 
 void client_message(xcb_generic_event_t *evt)
@@ -91,7 +89,7 @@ void client_message(xcb_generic_event_t *evt)
     } else if (e->type == cfg.ewmh->_NET_ACTIVE_WINDOW) {
         PRINTF("activating client: %u\n", e->window);
         if (IS_VISIBLE(c))
-            cfg.client_cur = c;
+            client_focus(c);
     }
 }
 
@@ -102,7 +100,7 @@ void property_notify(xcb_generic_event_t *evt)
     PRINTF("property notify: %u\n", e->window);
 
     client_t *c = client_locate(e->window);
-    if (e->atom != XCB_ATOM_WM_HINTS || !c || c == cfg.client_cur)
+    if (e->atom != XCB_ATOM_WM_HINTS || !c || c == cfg.flist)
         return;
 
     c->is_urgent = window_is_urgent(c->win);
@@ -113,11 +111,12 @@ void remove_client(xcb_window_t win)
     PRINTF("removing client: %u\n", win);
 
     client_t *c = client_locate(win);
-    if (c) {
-        client_unlink(c);
-        tile(c->mon);
-        free(c);
-    }
+    if (!c)
+        return;
+
+    client_unlink(c);
+    tile(c->mon);
+    free(c);
 }
 
 void unmap_notify(xcb_generic_event_t *evt)
@@ -158,16 +157,16 @@ void stage_window(unsigned int button, int x, int y)
     else /* clear previous rectangle */
         xcb_poly_rectangle(cfg.conn, cfg.screen->root, gc, 1, &rectangle);
 
-    rectangle = cfg.client_cur->geom;
+    rectangle = cfg.flist->geom;
 
     switch (butt) {
         case BUTTON_MOVE:
-            rectangle.x = x - cfg.client_cur->geom.x;
-            rectangle.y = y - cfg.client_cur->geom.y;
+            rectangle.x = x - cfg.flist->geom.x;
+            rectangle.y = y - cfg.flist->geom.y;
             break;
         case BUTTON_RESIZE:
-            rectangle.width  = x + cfg.client_cur->geom.width;
-            rectangle.height = y + cfg.client_cur->geom.height;
+            rectangle.width  = x + cfg.flist->geom.width;
+            rectangle.height = y + cfg.flist->geom.height;
             break;
     }
 
@@ -188,7 +187,7 @@ void button_press(xcb_generic_event_t *evt)
         return;
     }
 
-    cfg.client_cur = c;
+    client_focus(c);
 
     switch (e->detail) {
         case BUTTON_MOVE:
@@ -216,10 +215,10 @@ void button_release(xcb_generic_event_t *evt)
     stage_window(e->detail, e->root_x, e->root_y);
     switch (e->detail) {
         case BUTTON_MOVE:
-            client_move(cfg.client_cur, e->root_x - cfg.client_cur->geom.x, e->root_y - cfg.client_cur->geom.y);
+            client_move(cfg.flist, e->root_x - cfg.flist->geom.x, e->root_y - cfg.flist->geom.y);
             break;
         case BUTTON_RESIZE:
-            client_resize(cfg.client_cur, e->root_x + cfg.client_cur->geom.width, e->root_y + cfg.client_cur->geom.height);
+            client_resize(cfg.flist, e->root_x + cfg.flist->geom.width, e->root_y + cfg.flist->geom.height);
             break;
     }
 
@@ -233,9 +232,9 @@ void motion_notify(xcb_generic_event_t *evt)
     PRINTF("pointer moved to root '%u' (%d,%d) event '%u' (%d,%d) upon child '%u' with state: %u\n",
             e->root, e->root_x, e->root_y, e->event, e->event_x, e->event_y, e->child, e->state);
 
-    if (!cfg.client_cur->is_floating) {
-        cfg.client_cur->is_floating = true;
-        tile(cfg.client_cur->mon);
+    if (!cfg.flist->is_floating) {
+        cfg.flist->is_floating = true;
+        tile(cfg.flist->mon);
     }
 
     stage_window(XCB_NONE, e->root_x, e->root_y);

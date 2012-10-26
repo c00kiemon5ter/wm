@@ -22,22 +22,20 @@ void process_message(char *msg, char *rsp)
     if (strcmp(msg, "kill") == 0) {
         PRINTF("kill message: %s\n", msg);
 
-        if (!cfg.client_cur)
+        if (!cfg.flist)
             return;
 
-        monitor_t *m = cfg.client_cur->mon;
-        if (!client_kill(cfg.client_cur))
+        monitor_t *m = cfg.flist->mon;
+        if (!client_kill(cfg.flist))
             tile(m);
 
-        cfg.client_cur = cfg.clients;
-
-        PRINTF("cur client is: %u\n", cfg.client_cur->win);
+        PRINTF("focused client is: %u\n", cfg.flist->win);
     }
 
     if (strcmp(msg, "tile") == 0) {
         PRINTF("tile message %s\n", msg);
 
-        tile(cfg.monitor_cur);
+        tile(cfg.monitors);
     }
 
     PRINTF("send response: %s\n", rsp);

@@ -33,6 +33,5 @@ union overlay {
 +-------+
 
 messages interface
-focus mechanism
 update ewmh info (desktops, client list etc)
 
