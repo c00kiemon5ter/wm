@@ -52,16 +52,22 @@ typedef struct monitor_t {
 /**
  * a client
  *
+ * win - the window to manage
+ * mon - the monitor to which the window belongs
+ *
  * geom - the client geometry - x, y, width, height
  * tags - a bitmask with set bits the tags of the client
- * name - the name of the window
- * next - the next client
- * win  - the window to manage
- * mon  - the monitor to which the window belongs
  *
- * is_urgent    - set if the client has set an urgent hint
- * is_floating  - set if the client is floating
- * is_fullscrn  - set if the client is fullscreen
+ * title - the window title
+ * class - the window class name
+ * instance - the window instance name
+ *
+ * vnext - the next client on the screen
+ * fnext - the next client to receive focus
+ *
+ * is_urgent   - whether the client has set an urgent hint
+ * is_floating - whether the client is floating
+ * is_fullscrn - whether the client is fullscreen
  */
 typedef struct client_t {
     xcb_rectangle_t geom;
@@ -69,8 +75,9 @@ typedef struct client_t {
     char title[BUF_NAME_LEN], class[BUF_NAME_LEN], instance[BUF_NAME_LEN];
     bool is_urgent, is_floating, is_fullscrn;
     xcb_window_t win;
-    struct client_t *next;
     monitor_t *mon;
+    struct client_t *vnext;
+    struct client_t *fnext;
 } client_t;
 
 /**
@@ -94,14 +101,13 @@ typedef struct rule_t {
  * running      - state of the window manager
  * def_screen   - the screen number
  * screen       - the screen struct
- * conx         - the connection to the X server
+ * conn         - the connection to the X server
  * ewmh         - connection to manage ewmh
  * tag_names    - array with tag names
  * rules        - list of set rules
  * monitors     - list of available monitors
- * clients      - list of all managed clients
- * client_cur   - the current, active and focused client
- * monitor_cur  - the current, active and focused monitor
+ * vlist        - visual ordered list of all clients as they appear
+ * flist        - focus ordered list of all clients as they become active
  */
 struct configuration {
     bool running;
@@ -112,9 +118,8 @@ struct configuration {
     char tag_names[sizeof(uint16_t) * CHAR_BIT][BUF_NAME_LEN];
     rule_t *rules;
     monitor_t *monitors;
-    client_t *clients;
-    client_t *client_cur;
-    monitor_t *monitor_cur;
+    client_t *vlist;
+    client_t *flist;
 };
 
 extern struct configuration cfg;

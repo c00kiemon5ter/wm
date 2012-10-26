@@ -19,7 +19,7 @@
 #include "ewmh.h"
 #include "tile.h"
 
-struct configuration cfg = { 0, 0, 0, 0, 0, { { 0 } }, 0, 0, 0, 0, 0 };
+struct configuration cfg = { 0, 0, 0, 0, 0, { { 0 } }, 0, 0, 0, 0 };
 
 /**
  * setup server connection
@@ -98,9 +98,6 @@ void init_wm(void)
         m->mode = VSTACK;
     }
 
-    cfg.monitor_cur = cfg.monitors;
-    cfg.client_cur  = cfg.clients;
-
     for (size_t i = 0; i < LENGTH(cfg.tag_names); i++)
         snprintf(cfg.tag_names[i], sizeof(cfg.tag_names[0]), "%zd", i);
 }
@@ -136,7 +133,7 @@ void scan_orphans(void)
     }
 
     if (children)
-        tile(cfg.monitor_cur);
+        tile(cfg.monitors);
 
     free(reply);
 }
@@ -214,18 +211,18 @@ static void wait_event_or_message(const int dpy_fd, const int sock_fd)
 
 void cleanup(void)
 {
-    cfg.client_cur = cfg.clients;
-    while (cfg.client_cur) {
-        client_t *next = cfg.client_cur->next;
-        free(cfg.client_cur);
-        cfg.client_cur = next;
+    cfg.flist = cfg.vlist;
+    while (cfg.flist) {
+        client_t *next = cfg.flist->vnext;
+        free(cfg.flist);
+        cfg.flist = next;
     }
 
-    cfg.monitor_cur = cfg.monitors;
-    while (cfg.monitor_cur) {
-        monitor_t *next = cfg.monitor_cur->next;
-        free(cfg.monitor_cur);
-        cfg.monitor_cur = next;
+    monitor_t *m = cfg.monitors;
+    while (m) {
+        monitor_t *next = m->next;
+        free(m);
+        m = next;
     }
 
     xcb_ewmh_connection_wipe(cfg.ewmh);
