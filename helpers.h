@@ -12,7 +12,7 @@
 #define BOOLSTR(x)          &("false\0true"[6*x])
 
 #ifdef DEBUG
-#define PRINTF(fmt,...)     printf(":: %5d:%15.15s: " fmt, __LINE__, __FUNCTION__, __VA_ARGS__)
+#define PRINTF(fmt,...)     printf("%15s %5d %20s\t" fmt, __FILE__, __LINE__, __FUNCTION__, __VA_ARGS__)
 #else
 #define PRINTF(fmt,...)     ((void)0)
 #endif
