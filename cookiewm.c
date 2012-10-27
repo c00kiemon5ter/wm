@@ -14,8 +14,8 @@
 #include "common.h"
 #include "events.h"
 #include "messages.h"
-#include "screen.h"
-#include "window.h"
+#include "monitor.h"
+#include "client.h"
 #include "ewmh.h"
 #include "tile.h"
 
@@ -124,10 +124,11 @@ void scan_orphans(void)
 
         const xcb_get_window_attributes_cookie_t cookie = xcb_get_window_attributes_unchecked(cfg.conn, windows[child]);
         xcb_get_window_attributes_reply_t *reply = xcb_get_window_attributes_reply(cfg.conn, cookie, (void *)0);
+
         if (reply && reply->map_state == XCB_MAP_STATE_VIEWABLE) {
             PRINTF("handling orphan window: %u\n", windows[child]);
 
-            handle_window(windows[child]);
+            client_focus(handle_window(windows[child]));
             free(reply);
         }
     }

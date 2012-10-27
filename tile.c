@@ -2,7 +2,7 @@
 
 #include "tile.h"
 #include "helpers.h"
-#include "window.h"
+#include "client.h"
 
 /**
  * Max layout - all windows fullscreen

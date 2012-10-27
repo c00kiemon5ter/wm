@@ -3,8 +3,10 @@
 #include "events.h"
 #include "global.h"
 #include "helpers.h"
-#include "window.h"
+#include "client.h"
 #include "pointer.h"
+#include "window.h"
+#include "ewmh.h"
 #include "tile.h"
 
 void configure_request(xcb_generic_event_t *evt)
@@ -59,7 +61,7 @@ void map_request(xcb_generic_event_t *evt)
     PRINTF("map request %u\n", e->window);
 
     client_t *c = handle_window(e->window);
-    if (!c || !IS_VISIBLE(c))
+    if (!c || !IS_VISIBLE(c) || !ON_MONITOR(cfg.monitors, c))
         return;
 
     window_show(c->win);
@@ -88,8 +90,10 @@ void client_message(xcb_generic_event_t *evt)
         tile(c->mon);
     } else if (e->type == cfg.ewmh->_NET_ACTIVE_WINDOW) {
         PRINTF("activating client: %u\n", e->window);
-        if (IS_VISIBLE(c))
+        if (IS_VISIBLE(c) && ON_MONITOR(cfg.monitors, c)) {
+            ewmh_update_active_window(c->win);
             client_focus(c);
+        }
     }
 }
 
@@ -106,35 +110,30 @@ void property_notify(xcb_generic_event_t *evt)
     c->is_urgent = window_is_urgent(c->win);
 }
 
-void remove_client(xcb_window_t win)
+static
+void handle_window_remove(const xcb_window_t win)
 {
-    PRINTF("removing client: %u\n", win);
-
     client_t *c = client_locate(win);
     if (!c)
         return;
 
-    client_unlink(c);
-    tile(c->mon);
-    free(c);
-}
-
-void unmap_notify(xcb_generic_event_t *evt)
-{
-    xcb_unmap_notify_event_t *e = (xcb_unmap_notify_event_t *)evt;
-
-    PRINTF("unmap notify: %u\n", e->window);
-
-    remove_client(e->window);
+    monitor_t *m = c->mon;
+    client_remove(c);
+    tile(m);
 }
 
 void destroy_notify(xcb_generic_event_t *evt)
 {
     xcb_destroy_notify_event_t *e = (xcb_destroy_notify_event_t *)evt;
-
     PRINTF("destroy notify %u\n", e->window);
+    handle_window_remove(e->window);
+}
 
-    remove_client(e->window);
+void unmap_notify(xcb_generic_event_t *evt)
+{
+    xcb_unmap_notify_event_t *e = (xcb_unmap_notify_event_t *)evt;
+    PRINTF("unmap notify: %u\n", e->window);
+    handle_window_remove(e->window);
 }
 
 /**
@@ -142,6 +141,7 @@ void destroy_notify(xcb_generic_event_t *evt)
  * representing the position of
  * the moved or resized window.
  */
+static
 void stage_window(unsigned int button, int x, int y)
 {
     static xcb_rectangle_t rectangle;
