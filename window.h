@@ -6,30 +6,6 @@
 
 #include <xcb/xcb.h>
 
-#include "global.h"
-
-client_t *client_create(const xcb_window_t);
-
-void client_link_head(client_t *);
-void client_link_tail(client_t *);
-void client_flink(client_t *);
-
-void client_vunlink(client_t *);
-void client_funlink(client_t *);
-void client_unlink(client_t *);
-
-void client_focus(client_t *);
-bool client_kill(client_t *);
-
-client_t *client_locate(const xcb_window_t);
-client_t *handle_window(const xcb_window_t);
-
-void client_move(client_t *, const int16_t, const int16_t);
-void client_resize(client_t *, const uint16_t, const uint16_t);
-void client_move_resize(client_t *, const int16_t, const int16_t, const uint16_t, const uint16_t);
-void client_move_resize_geom(client_t *, const xcb_rectangle_t);
-void client_toggle_fullscreen(client_t *);
-
 void window_move(const xcb_window_t, const int16_t, const int16_t);
 void window_resize(const xcb_window_t, const uint16_t, const uint16_t);
 void window_move_resize(const xcb_window_t, const int16_t, const int16_t, const uint16_t, const uint16_t);
