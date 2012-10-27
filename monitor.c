@@ -4,7 +4,7 @@
 #include <xcb/randr.h>
 #include <xcb/xinerama.h>
 
-#include "screen.h"
+#include "monitor.h"
 #include "helpers.h"
 
 /**
@@ -44,6 +44,25 @@ void monitor_focus(monitor_t *mon)
     mon->next = cfg.monitors;
     cfg.monitors = mon;
 }
+
+void monitor_focus_next(void)
+{
+    monitor_t *m = cfg.monitors->next;
+
+    if (!m)
+        return;
+
+    monitor_focus(m);
+}
+
+void monitor_focus_prev(void)
+{
+    monitor_t *m = cfg.monitors;
+    while (m && m->next) m = m->next;
+    monitor_focus(m);
+}
+
+/* ** xcb related functions - monitor initialization ** */
 
 bool randr(void)
 {
