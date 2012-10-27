@@ -103,8 +103,11 @@ void property_notify(xcb_generic_event_t *evt)
 
     PRINTF("property notify: %u\n", e->window);
 
+    if (e->atom != XCB_ATOM_WM_HINTS || e->window == cfg.screen->root)
+        return;
+
     client_t *c = client_locate(e->window);
-    if (e->atom != XCB_ATOM_WM_HINTS || !c || c == cfg.flist)
+    if (!c)
         return;
 
     c->is_urgent = window_is_urgent(c->win);
