@@ -12,7 +12,7 @@ LDFLAGS = $(LIBS)
 PREFIX   ?= /usr/local
 BINPREFIX = $(PREFIX)/bin
 
-WM_SRC = cookiewm.c helpers.c screen.c events.c messages.c rules.c pointer.c window.c ewmh.c icccm.c tile.c
+WM_SRC = cookiewm.c helpers.c events.c messages.c monitor.c client.c rules.c pointer.c window.c ewmh.c icccm.c tile.c
 CL_SRC = cookie.c helpers.c
 
 WM_OBJ = $(WM_SRC:.c=.o)
