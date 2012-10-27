@@ -16,9 +16,9 @@ void configure_request(xcb_generic_event_t *evt)
     PRINTF("configure request %u\n", e->window);
 
     client_t *c = client_locate(e->window);
-    if (c && IS_TILED(c)) {
+    if (c) {
         xcb_rectangle_t geom = IS_TILED(c) ? c->geom : c->mon->geom;
-        xcb_configure_notify_event_t evt = {
+        const xcb_configure_notify_event_t evt = {
             .response_type  = XCB_CONFIGURE_NOTIFY,
             .event          = e->window,
             .window         = e->window,

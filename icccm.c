@@ -24,36 +24,38 @@ xcb_atom_t get_atom(const char *atom_name)
 
 bool icccm_close_window(const xcb_window_t win)
 {
-    bool state = false;
-
     xcb_atom_t wm_protocols = get_atom(WM_PROTOCOLS);
     xcb_atom_t wm_delete_window = get_atom(WM_DELETE_WINDOW);
 
     if (!wm_protocols || !wm_delete_window)
-        return state;
+        return false;
 
     const xcb_get_property_cookie_t cookie = xcb_icccm_get_wm_protocols_unchecked(cfg.conn, win, wm_protocols);
     xcb_icccm_get_wm_protocols_reply_t data;
 
     if (!xcb_icccm_get_wm_protocols_reply(cfg.conn, cookie, &data, (void *)0))
-        return state;
+        return false;
 
+    bool state = false;
     for (unsigned short i = 0; i < data.atoms_len; i++)
         if ((state = data.atoms[i] == wm_delete_window))
             break;
 
     xcb_icccm_get_wm_protocols_reply_wipe(&data);
 
-    xcb_client_message_event_t evt = {
-        .response_type = XCB_CLIENT_MESSAGE,
-        .window = win,
-        .format = 32,
-        .type = wm_protocols,
-        .data.data32[0] = wm_delete_window,
-        .data.data32[1] = XCB_CURRENT_TIME,
-    };
+    if (state) {
+        const xcb_client_message_event_t evt = {
+            .response_type = XCB_CLIENT_MESSAGE,
+            .window = win,
+            .format = 32,
+            .type = wm_protocols,
+            .data.data32[0] = wm_delete_window,
+            .data.data32[1] = XCB_CURRENT_TIME,
+        };
+        xcb_send_event(cfg.conn, false, win, XCB_EVENT_MASK_NO_EVENT, (char *)&evt);
+    }
 
-    xcb_send_event(cfg.conn, false, win, XCB_EVENT_MASK_NO_EVENT, (char *)&evt);
+    PRINTF("close window: %s\n", BOOLSTR(state));
 
     return state;
 }
@@ -103,21 +105,12 @@ bool icccm_is_transient(const xcb_window_t win)
 
 bool icccm_has_urgent_hint(const xcb_window_t win)
 {
-    bool state = false;
-
     const xcb_get_property_cookie_t cookie = xcb_icccm_get_wm_hints_unchecked(cfg.conn, win);
     xcb_icccm_wm_hints_t data;
 
     if (!xcb_icccm_get_wm_hints_reply(cfg.conn, cookie, &data, (void *)0))
-        return state;
+        return false;
 
-    /* FIXME needs testing - what works here ? */
-    state = data.flags & XCB_ICCCM_WM_HINT_X_URGENCY;
-    PRINTF("state is: %s\n", BOOLSTR(state));
-
-    state = xcb_icccm_wm_hints_get_urgency(&data);
-    PRINTF("state is: %s\n", BOOLSTR(state));
-
-    return state;
+    return xcb_icccm_wm_hints_get_urgency(&data);
 }
 

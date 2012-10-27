@@ -10,8 +10,7 @@
 
 /* mask that defines the events the wm is notified of */
 #define ROOT_EVENT_MASK     ( XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT \
-                            | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY   \
-                            | XCB_EVENT_MASK_PROPERTY_CHANGE       )
+                            | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY   )
 
 /* length for small buffers */
 #define BUF_NAME_LEN 256

@@ -58,15 +58,13 @@ bool window_update_geom(const xcb_window_t win, xcb_rectangle_t *geom)
 
 bool window_override_redirect(const xcb_window_t win)
 {
-    bool state = false;
-
     const xcb_get_window_attributes_cookie_t cookie = xcb_get_window_attributes(cfg.conn, win);
     xcb_get_window_attributes_reply_t *reply = xcb_get_window_attributes_reply(cfg.conn, cookie, (void *)0);
 
     if (!reply)
-        return state;
+        return false;
 
-    state = reply->override_redirect;
+    const bool state = reply->override_redirect;
 
     free(reply);
 
