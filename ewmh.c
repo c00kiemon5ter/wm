@@ -15,7 +15,7 @@ void ewmh_init(void)
 
 void ewmh_set_supported_atoms(void)
 {
-    xcb_atom_t new_atoms[] = {
+    xcb_atom_t ewmh_atoms[] = {
         cfg.ewmh->_NET_SUPPORTED,
         cfg.ewmh->_NET_WM_STATE,
         cfg.ewmh->_NET_WM_STATE_FULLSCREEN,
@@ -29,7 +29,7 @@ void ewmh_set_supported_atoms(void)
         cfg.ewmh->_NET_CLIENT_LIST,
         cfg.ewmh->_NET_ACTIVE_WINDOW,
     };
-    xcb_ewmh_set_supported(cfg.ewmh, cfg.def_screen, LENGTH(new_atoms), new_atoms);
+    xcb_ewmh_set_supported(cfg.ewmh, cfg.def_screen, LENGTH(ewmh_atoms), ewmh_atoms);
 }
 
 inline
