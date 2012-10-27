@@ -5,7 +5,7 @@
 
 char *bitstr(uintmax_t val, char bits[static BUF_BITS_SIZE])
 {
-    static const int base = 2;
+    static const short base = 2;
     char *str = bits + BUF_BITS_SIZE;
 
     PRINTF("dec: %zd\n", val);
