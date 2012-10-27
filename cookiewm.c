@@ -114,26 +114,32 @@ void scan_orphans(void)
     if (!reply)
         return;
 
-    int children = xcb_query_tree_children_length(reply);
+    int len = xcb_query_tree_children_length(reply);
     xcb_window_t *windows = xcb_query_tree_children(reply);
 
-    PRINTF("found '%d' orphans\n", children);
+    PRINTF("found '%d' orphan windows\n", len);
 
-    for (int child = 0; child < children; child++) {
-        PRINTF("checking orphan window: %u\n", windows[child]);
+    xcb_get_window_attributes_cookie_t cookies[len];
+    for (int i = 0; i < len; i++) {
+        PRINTF("quering orphan window: %u\n", windows[i]);
+        cookies[i] = xcb_get_window_attributes_unchecked(cfg.conn, windows[i]);
+    }
 
-        const xcb_get_window_attributes_cookie_t cookie = xcb_get_window_attributes_unchecked(cfg.conn, windows[child]);
-        xcb_get_window_attributes_reply_t *reply = xcb_get_window_attributes_reply(cfg.conn, cookie, (void *)0);
+    for (int i = 0; i < len; i++) {
+        PRINTF("checking orphan window: %u\n", windows[i]);
 
+        xcb_get_window_attributes_reply_t *reply = xcb_get_window_attributes_reply(cfg.conn, cookies[i], (void *)0);
         if (reply && reply->map_state == XCB_MAP_STATE_VIEWABLE) {
-            PRINTF("handling orphan window: %u\n", windows[child]);
+            PRINTF("handling orphan window: %u\n", windows[i]);
 
-            client_focus(handle_window(windows[child]));
+            client_t *c = handle_window(windows[i]);
+            if (c)
+                client_focus(c);
             free(reply);
         }
     }
 
-    if (children)
+    if (len)
         tile(cfg.monitors);
 
     free(reply);
