@@ -5,8 +5,8 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
-#include "helpers.h"
 #include "common.h"
+#include "helpers.h"
 
 int main(int argc, char *argv[])
 {
