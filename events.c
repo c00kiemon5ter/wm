@@ -149,7 +149,7 @@ void unmap_notify(xcb_generic_event_t *evt)
 static
 void stage_window(unsigned int button, int xw, int yh)
 {
-    static xcb_rectangle_t rectangle;
+    static xcb_rectangle_t r;
     static unsigned int butt;
 
     const xcb_gcontext_t gc = xcb_generate_id(cfg.conn);
@@ -160,28 +160,29 @@ void stage_window(unsigned int button, int xw, int yh)
     if (button != XCB_NONE)
         butt = button;
     else /* clear previous rectangle */
-        xcb_poly_rectangle(cfg.conn, cfg.screen->root, gc, 1, &rectangle);
+        xcb_poly_rectangle(cfg.conn, cfg.screen->root, gc, 1, &r);
 
-    rectangle = (const xcb_rectangle_t) {
-        .x = cfg.flist->geom.x + cfg.flist->mon->border / 2,
-        .y = cfg.flist->geom.y + cfg.flist->mon->border / 2,
+    const uint16_t half_border = cfg.flist->mon->border / 2;
+    r = (const xcb_rectangle_t) {
+        .x = cfg.flist->geom.x + half_border,
+        .y = cfg.flist->geom.y + half_border,
         .width  = cfg.flist->geom.width  + cfg.flist->mon->border,
         .height = cfg.flist->geom.height + cfg.flist->mon->border,
     };
 
     switch (butt) {
         case BUTTON_MOVE:
-            rectangle.x = xw - rectangle.x;
-            rectangle.y = yh - rectangle.y;
+            r.x = xw - cfg.flist->geom.x + half_border;
+            r.y = yh - cfg.flist->geom.y + half_border;
             break;
         case BUTTON_RESIZE:
-            rectangle.width  += xw;
-            rectangle.height += yh;
+            r.width  += xw;
+            r.height += yh;
             break;
     }
 
     /* draw new rectangle */
-    xcb_poly_rectangle(cfg.conn, cfg.screen->root, gc, 1, &rectangle);
+    xcb_poly_rectangle(cfg.conn, cfg.screen->root, gc, 1, &r);
 }
 
 void button_press(xcb_generic_event_t *evt)
