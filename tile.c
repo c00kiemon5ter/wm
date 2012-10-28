@@ -81,6 +81,8 @@ void grid(const monitor_t *mon, const unsigned short wins)
 
 /**
  * vertical stack - the common tiling layout
+ * supports multiple windows in master area
+ * aka nv-stack nmaster-vertical/tile-stack
  *
  * +--------+
  * |    |   |
@@ -129,6 +131,8 @@ void vstack(const monitor_t *mon, const unsigned short wins)
 
 /**
  * horizontal stack - bottom stack
+ * supports multiple windows in master area
+ * aka nh-stack nmaster-bottom-stack
  *
  * +--------+
  * |        |
@@ -137,30 +141,41 @@ void vstack(const monitor_t *mon, const unsigned short wins)
  * +--------+
  *
  */
-void hstack(const monitor_t *mon, unsigned short wins)
+void hstack(const monitor_t *mon, const unsigned short wins)
 {
-    client_t *c = cfg.vlist;
-
-    /* place the first 'm_wins' windows in the master area */
     const uint16_t m_area = mon->geom.height * M_AREA_FACT + mon->m_area;
-    const uint16_t m_wins = (wins <= mon->m_wins) ? wins - 1 : mon->m_wins;
 
-    for (unsigned short i = 0, m_w = mon->geom.width / m_wins; c && i < m_wins; c = c->vnext)
-        if (ON_MONITOR(mon, c) && IS_VISIBLE(c) && IS_TILED(c))
-            client_move_resize(c, mon->geom.x + i++ * m_w, mon->geom.y, m_w, m_area);
+    uint16_t m_wins = (wins <= mon->m_wins) ? wins - 1 : mon->m_wins;
+    uint16_t s_wins = wins - m_wins;
+    uint16_t fix = !!mon->spacer * OFFSET;  /* single border/spacer in the middle */
 
-    /* all other windows go to the stack */
-    wins -= m_wins;
+    client_t *c = cfg.vlist;
+    xcb_rectangle_t r;
 
-    const int16_t client_y = mon->geom.y + m_area;
-    const uint16_t client_w = mon->geom.width / wins;
-    const uint16_t client_h = mon->geom.height - m_area;
+    r.x      = mon->geom.x + mon->spacer;
+    r.y      = mon->geom.y + mon->spacer;
+    r.width  = ((mon->geom.width - (mon->spacer ? mon->spacer : mon->border)) / m_wins) - mon->border - fix;
+    r.height = m_area - 2 * OFFSET;
 
-    for (int16_t client_x = mon->geom.x; c && wins; c = c->vnext)
+    /* place master 'm_wins' windows in the master area */
+    for (; c && m_wins; c = c->vnext)
         if (ON_MONITOR(mon, c) && IS_VISIBLE(c) && IS_TILED(c)) {
-            client_move_resize(c, client_x, client_y, client_w, client_h);
-            client_x += client_w;
-            --wins;
+            client_move_resize(c, r.x, r.y, r.width, r.height);
+            r.x += mon->border + r.width + fix;
+            --m_wins;
+        }
+
+    r.x      = mon->geom.x + mon->spacer;
+    r.y      = mon->geom.y + OFFSET + r.height + fix;
+    r.width  = ((mon->geom.width - (mon->spacer ? mon->spacer : mon->border)) / s_wins) - mon->border - fix;
+    r.height = mon->geom.height - m_area - mon->border - fix;
+
+    /* place stack 's_wins' windows in the stack area */
+    for (; c && s_wins; c = c->vnext)
+        if (ON_MONITOR(mon, c) && IS_VISIBLE(c) && IS_TILED(c)) {
+            client_move_resize(c, r.x, r.y, r.width, r.height);
+            r.x += mon->border + r.width + fix;
+            --s_wins;
         }
 }
 
