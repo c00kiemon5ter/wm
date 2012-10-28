@@ -44,19 +44,18 @@ void monocle(const monitor_t *mon, unsigned short wins)
  * +--------+
  *
  */
-void grid(const monitor_t *mon, unsigned short wins)
+void grid(const monitor_t *mon, const unsigned short wins)
 {
-    const unsigned short n = wins;
     unsigned short cols = 0, rows = 0;
     unsigned short ncol = 0, nrow = 0;
 
     /* calculate number of columns and rows - emulate square root */
-    for (cols = 0; cols <= n/2; cols++)
-        if (cols*cols >= n)
+    for (cols = 0; cols <= wins/2; cols++)
+        if (cols*cols >= wins)
             break;
-    if (n == 5)
+    if (wins == 5)
         cols = 2;
-    rows = n/cols;
+    rows = wins/cols;
 
     unsigned short i = 0;
 
@@ -65,8 +64,8 @@ void grid(const monitor_t *mon, unsigned short wins)
 
     for (client_t *c = cfg.vlist; c && i < wins; c = c->vnext)
         if (ON_MONITOR(mon, c) && IS_VISIBLE(c) && IS_TILED(c)) {
-            if (i++/rows + 1 > cols - n%cols)
-                rows = n/cols + 1;
+            if (i++/rows + 1 > cols - wins%cols)
+                rows = wins/cols + 1;
 
             client_move_resize(c, mon->geom.x + client_width  * ncol,
                                mon->geom.y + client_height * nrow / rows,
@@ -90,40 +89,41 @@ void grid(const monitor_t *mon, unsigned short wins)
  * +--------+
  *
  */
-void vstack(const monitor_t *mon, unsigned short wins)
+void vstack(const monitor_t *mon, const unsigned short wins)
 {
-    client_t *c = cfg.vlist;
-
     const uint16_t m_area = mon->geom.width * M_AREA_FACT + mon->m_area;
-    const uint16_t m_wins = (wins <= mon->m_wins) ? wins - 1 : mon->m_wins;
 
-    xcb_rectangle_t r = {
-        .x = mon->geom.x + mon->spacer,
-        .y = mon->geom.y + mon->spacer,
-        .width  = m_area - OFFSET - mon->border,
-        .height = mon->geom.height / m_wins - 2 * OFFSET,
-    };
+    uint16_t m_wins = (wins <= mon->m_wins) ? wins - 1 : mon->m_wins;
+    uint16_t s_wins = wins - m_wins;
+    uint16_t fix = !!mon->spacer * OFFSET;  /* single border/spacer in the middle */
 
-    /* place the first 'm_wins' windows in the master area */
-    for (unsigned short i = 0; c && i < m_wins; c = c->vnext)
-        if (ON_MONITOR(mon, c) && IS_VISIBLE(c) && IS_TILED(c))
-            client_move_resize(c, r.x, r.y + i++ * r.height, r.width, r.height);
+    client_t *c = cfg.vlist;
+    xcb_rectangle_t r;
 
-    /* all other windows go to the stack */
-    wins -= m_wins;
+    r.x      = mon->geom.x + mon->spacer;
+    r.y      = mon->geom.y + mon->spacer;
+    r.width  = m_area - 2 * OFFSET;
+    r.height = ((mon->geom.height - (mon->spacer ? mon->spacer : mon->border)) / m_wins) - mon->border - fix;
 
-    /* single border in middle */
-    uint16_t fix = !mon->spacer * mon->border;
-
-    r.x     += m_area - fix;
-    r.width  = mon->geom.width - m_area - 2 * OFFSET + fix;
-    r.height = mon->geom.height / wins - OFFSET;
-
-    for (fix = OFFSET; c && wins; c = c->vnext)
+    /* place master 'm_wins' windows in the master area */
+    for (; c && m_wins; c = c->vnext)
         if (ON_MONITOR(mon, c) && IS_VISIBLE(c) && IS_TILED(c)) {
-            client_move_resize(c, r.x, r.y, r.width, r.height - fix);
-            r.y += r.height + fix;
-            --wins;
+            client_move_resize(c, r.x, r.y, r.width, r.height);
+            r.y += mon->border + r.height + fix;
+            --m_wins;
+        }
+
+    r.x      = mon->geom.x + OFFSET + r.width + fix;
+    r.y      = mon->geom.y + mon->spacer;
+    r.width  = mon->geom.width - m_area - mon->border - fix;
+    r.height = ((mon->geom.height - (mon->spacer ? mon->spacer : mon->border)) / s_wins) - mon->border - fix;
+
+    /* place stack 's_wins' windows in the stack area */
+    for (; c && s_wins; c = c->vnext)
+        if (ON_MONITOR(mon, c) && IS_VISIBLE(c) && IS_TILED(c)) {
+            client_move_resize(c, r.x, r.y, r.width, r.height);
+            r.y += mon->border + r.height + fix;
+            --s_wins;
         }
 }
 
