@@ -139,7 +139,7 @@ void client_focus(client_t *c)
     monitor_focus(c->mon);
 
     /* FIXME make configurable border width per monitor probably */
-    window_set_border_width(c->win, 4);
+    window_set_border_width(c->win, c->mon->border);
     xcb_set_input_focus(cfg.conn, XCB_INPUT_FOCUS_POINTER_ROOT, c->win, XCB_CURRENT_TIME);
 
     PRINTF("focused client is: %u\n", c->win);

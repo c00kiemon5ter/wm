@@ -4,6 +4,9 @@
 #include "helpers.h"
 #include "client.h"
 
+/* default master area ratio */
+#define M_AREA_FACT 0.55
+
 /**
  * Max layout - all windows fullscreen
  *
@@ -70,7 +73,7 @@ void grid(const monitor_t *mon, unsigned short wins)
 }
 
 /**
- * vertical stack - the common tiling mode
+ * vertical stack - the common tiling layout
  *
  * +--------+
  * |    |   |
@@ -145,7 +148,7 @@ void hstack(const monitor_t *mon, unsigned short wins)
 
 /**
  * tile the given monitor
- * according to its mode
+ * according to its layout
  */
 void tile(const monitor_t *mon)
 {
@@ -165,13 +168,13 @@ void tile(const monitor_t *mon)
         return;
     }
 
-    switch (mon->mode) {
+    switch (mon->layout) {
         case VSTACK:    vstack(mon, num_windows);   break;
         case HSTACK:    hstack(mon, num_windows);   break;
         case GRID:      grid(mon, num_windows);     break;
         case MONOCLE:   monocle(mon, num_windows);  break;
         case FLOAT:     /* do not handle */         break;
-        default: PRINTF("unknown layout: %d\n", mon->mode); break;
+        default: PRINTF("unknown layout: %d\n", mon->layout); break;
     }
 }
 

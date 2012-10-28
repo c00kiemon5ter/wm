@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define POINTER_DEFAULT     68
+#define POINTER_RESET       68
 #define POINTER_TCORSS      130
 
 bool window_grab_pointer(xcb_cursor_t);

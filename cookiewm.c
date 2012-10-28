@@ -92,10 +92,12 @@ static void init_socket(int *sock_fd)
 void init_wm(void)
 {
     for (monitor_t *m = cfg.monitors; m; m = m->next) {
-        BIT_SET(m->tags, 0);
-        m->m_area = 0;
-        m->m_wins = 1;
-        m->mode = VSTACK;
+        BIT_SET(m->tags, MONITOR_DEFAULT_TAG);
+        m->m_area = MONITOR_DEFAULT_M_AREA;
+        m->m_wins = MONITOR_DEFAULT_M_WINS;
+        m->spacer = MONITOR_DEFAULT_SPACER;
+        m->border = MONITOR_DEFAULT_BORDER;
+        m->layout = MONITOR_DEFAULT_LAYOUT;
     }
 
     for (size_t i = 0; i < LENGTH(cfg.tag_names); i++)

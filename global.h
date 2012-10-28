@@ -15,9 +15,6 @@
 /* length for small buffers */
 #define BUF_NAME_LEN 256
 
-/* default master area ratio */
-#define M_AREA_FACT 0.55
-
 /**
  * enumeration of tiling methods
  */
@@ -41,10 +38,8 @@ typedef enum {
  */
 typedef struct monitor_t {
     xcb_rectangle_t geom;
-    uint16_t tags;
-    uint16_t m_area;
-    uint16_t m_wins;
-    layout_t mode;
+    uint16_t tags, m_area, m_wins, spacer, border;
+    layout_t layout;
     struct monitor_t *next;
 } monitor_t;
 
