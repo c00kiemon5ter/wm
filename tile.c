@@ -5,7 +5,8 @@
 #include "client.h"
 
 /* default master area ratio */
-#define M_AREA_FACT 0.55
+#define M_AREA_FACT     0.55
+#define OFFSET          (mon->border + mon->spacer)
 
 /**
  * Max layout - all windows fullscreen
@@ -19,9 +20,16 @@
  */
 void monocle(const monitor_t *mon, unsigned short wins)
 {
+    const xcb_rectangle_t r = {
+        .x = mon->geom.x + mon->spacer,
+        .y = mon->geom.y + mon->spacer,
+        .width  = mon->geom.width  - 2 * OFFSET,
+        .height = mon->geom.height - 2 * OFFSET,
+    };
+
     for (client_t *c = cfg.vlist; c && wins; c = c->vnext)
         if (ON_MONITOR(mon, c) && IS_VISIBLE(c) && IS_TILED(c)) {
-            client_move_resize_geom(c, mon->geom);
+            client_move_resize_geom(c, r);
             --wins;
         }
 }
@@ -86,25 +94,35 @@ void vstack(const monitor_t *mon, unsigned short wins)
 {
     client_t *c = cfg.vlist;
 
-    /* place the first 'm_wins' windows in the master area */
     const uint16_t m_area = mon->geom.width * M_AREA_FACT + mon->m_area;
     const uint16_t m_wins = (wins <= mon->m_wins) ? wins - 1 : mon->m_wins;
 
-    for (unsigned short i = 0, m_h = mon->geom.height / m_wins; c && i < m_wins; c = c->vnext)
+    xcb_rectangle_t r = {
+        .x = mon->geom.x + mon->spacer,
+        .y = mon->geom.y + mon->spacer,
+        .width  = m_area - OFFSET - mon->border,
+        .height = mon->geom.height / m_wins - 2 * OFFSET,
+    };
+
+    /* place the first 'm_wins' windows in the master area */
+    for (unsigned short i = 0; c && i < m_wins; c = c->vnext)
         if (ON_MONITOR(mon, c) && IS_VISIBLE(c) && IS_TILED(c))
-            client_move_resize(c, mon->geom.x, mon->geom.y + i++ * m_h, m_area, m_h);
+            client_move_resize(c, r.x, r.y + i++ * r.height, r.width, r.height);
 
     /* all other windows go to the stack */
     wins -= m_wins;
 
-    const int16_t client_x = mon->geom.x + m_area;
-    const uint16_t client_w = mon->geom.width - m_area;
-    const uint16_t client_h = mon->geom.height / wins;
+    /* single border in middle */
+    uint16_t fix = !mon->spacer * mon->border;
 
-    for (int16_t client_y = mon->geom.y; c && wins; c = c->vnext)
+    r.x     += m_area - fix;
+    r.width  = mon->geom.width - m_area - 2 * OFFSET + fix;
+    r.height = mon->geom.height / wins - OFFSET;
+
+    for (fix = OFFSET; c && wins; c = c->vnext)
         if (ON_MONITOR(mon, c) && IS_VISIBLE(c) && IS_TILED(c)) {
-            client_move_resize(c, client_x, client_y, client_w, client_h);
-            client_y += client_h;
+            client_move_resize(c, r.x, r.y, r.width, r.height - fix);
+            r.y += r.height + fix;
             --wins;
         }
 }
@@ -154,8 +172,12 @@ void tile(const monitor_t *mon)
 {
     unsigned short num_windows = 0;
     for (client_t *c = cfg.vlist; c; c = c->vnext)
-        if (ON_MONITOR(mon, c) && IS_VISIBLE(c) && IS_TILED(c))
-            ++num_windows;
+        if (ON_MONITOR(mon, c) && IS_VISIBLE(c)) {
+            client_update_border(c);
+            if (IS_TILED(c)) {
+                ++num_windows;
+            }
+        }
 
     if (!num_windows)
         return;
