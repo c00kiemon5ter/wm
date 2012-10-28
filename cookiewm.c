@@ -162,9 +162,8 @@ static void check_event(const int dpy_fd, const fd_set *fds)
         }
     }
 
-    if (xcb_connection_has_error(cfg.conn)) {
+    if (xcb_connection_has_error(cfg.conn))
         err("connection has errors\n");
-    }
 }
 
 /**
