@@ -138,8 +138,7 @@ void client_focus(client_t *c)
     client_flink(c);
     monitor_focus(c->mon);
 
-    /* FIXME make configurable border width per monitor probably */
-    window_set_border_width(c->win, c->mon->border);
+    client_update_border(c);
     xcb_set_input_focus(cfg.conn, XCB_INPUT_FOCUS_POINTER_ROOT, c->win, XCB_CURRENT_TIME);
 
     PRINTF("focused client is: %u\n", c->win);
@@ -298,6 +297,18 @@ inline
 void client_move_resize_geom(client_t *c, const xcb_rectangle_t geom)
 {
     window_move_resize_geom(c->win, c->geom = geom);
+}
+
+inline
+void client_update_geom(client_t *c)
+{
+    window_update_geom(c->win, &c->geom);
+}
+
+inline
+void client_update_border(const client_t *c)
+{
+    window_set_border_width(c->win, c->mon->border);
 }
 
 void client_toggle_fullscreen(client_t *c)

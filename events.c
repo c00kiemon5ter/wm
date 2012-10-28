@@ -16,8 +16,8 @@ void configure_request(xcb_generic_event_t *evt)
     PRINTF("configure request %u\n", e->window);
 
     client_t *c = client_locate(e->window);
-    if (c) {
-        xcb_rectangle_t geom = IS_TILED(c) ? c->geom : c->mon->geom;
+    if (c && !c->is_floating) {
+        xcb_rectangle_t geom = c->is_fullscrn ? c->mon->geom : c->geom;
         const xcb_configure_notify_event_t evt = {
             .response_type  = XCB_CONFIGURE_NOTIFY,
             .event          = e->window,
@@ -27,7 +27,7 @@ void configure_request(xcb_generic_event_t *evt)
             .y      = geom.y,
             .width  = geom.width,
             .height = geom.height,
-            .border_width = 3,
+            .border_width = c->mon->border,
             .override_redirect = false
         };
         xcb_send_event(cfg.conn, false, e->window, XCB_EVENT_MASK_STRUCTURE_NOTIFY, (const char *)&evt);
@@ -51,6 +51,8 @@ void configure_request(xcb_generic_event_t *evt)
             *val++ = e->stack_mode;
 
         xcb_configure_window(cfg.conn, e->window, e->value_mask, values);
+        if (c)
+            client_update_geom(c);
     }
 }
 
