@@ -147,14 +147,14 @@ void unmap_notify(xcb_generic_event_t *evt)
  * the moved or resized window.
  */
 static
-void stage_window(unsigned int button, int x, int y)
+void stage_window(unsigned int button, int xw, int yh)
 {
     static xcb_rectangle_t rectangle;
     static unsigned int butt;
 
     const xcb_gcontext_t gc = xcb_generate_id(cfg.conn);
     const uint32_t mask = XCB_GC_FUNCTION | XCB_GC_LINE_WIDTH | XCB_GC_SUBWINDOW_MODE;
-    const uint32_t values[] = { XCB_GX_INVERT, 8, XCB_SUBWINDOW_MODE_INCLUDE_INFERIORS };
+    const uint32_t values[] = { XCB_GX_INVERT, cfg.flist->mon->border, XCB_SUBWINDOW_MODE_INCLUDE_INFERIORS };
     xcb_create_gc(cfg.conn, gc, cfg.screen->root, mask, values);
 
     if (button != XCB_NONE)
@@ -162,16 +162,21 @@ void stage_window(unsigned int button, int x, int y)
     else /* clear previous rectangle */
         xcb_poly_rectangle(cfg.conn, cfg.screen->root, gc, 1, &rectangle);
 
-    rectangle = cfg.flist->geom;
+    rectangle = (const xcb_rectangle_t) {
+        .x = cfg.flist->geom.x + cfg.flist->mon->border / 2,
+        .y = cfg.flist->geom.y + cfg.flist->mon->border / 2,
+        .width  = cfg.flist->geom.width  + cfg.flist->mon->border,
+        .height = cfg.flist->geom.height + cfg.flist->mon->border,
+    };
 
     switch (butt) {
         case BUTTON_MOVE:
-            rectangle.x = x - cfg.flist->geom.x;
-            rectangle.y = y - cfg.flist->geom.y;
+            rectangle.x = xw - rectangle.x;
+            rectangle.y = yh - rectangle.y;
             break;
         case BUTTON_RESIZE:
-            rectangle.width  = x + cfg.flist->geom.width;
-            rectangle.height = y + cfg.flist->geom.height;
+            rectangle.width  += xw;
+            rectangle.height += yh;
             break;
     }
 
@@ -183,8 +188,7 @@ void button_press(xcb_generic_event_t *evt)
 {
     xcb_button_press_event_t *e = (xcb_button_press_event_t *)evt;
 
-    PRINTF("button '%u' pressed on event '%u' child '%u' at root (%d,%d) event (%d,%d) with state: %u\n",
-            e->detail, e->event, e->child, e->root_x, e->root_y, e->event_x, e->event_y, e->state);
+    PRINTF("button '%u' pressed on child '%u' at root (%d,%d)\n", e->detail, e->child, e->root_x, e->root_y);
 
     client_t *c = (void *)0;
     if (!e->child || !(c = client_locate(e->child))) {
@@ -214,8 +218,7 @@ void button_release(xcb_generic_event_t *evt)
 {
     xcb_button_release_event_t *e = (xcb_button_release_event_t *)evt;
 
-    PRINTF("button '%u' released on event '%u' child '%u' at root (%d,%d) event (%d,%d) with state: %u\n",
-            e->detail, e->event, e->child, e->root_x, e->root_y, e->event_x, e->event_y, e->state);
+    PRINTF("button '%u' released on child '%u' at root (%d,%d)\n", e->detail, e->child, e->root_x, e->root_y);
 
     stage_window(e->detail, e->root_x, e->root_y);
     switch (e->detail) {
@@ -234,8 +237,7 @@ void motion_notify(xcb_generic_event_t *evt)
 {
     xcb_motion_notify_event_t *e = (xcb_motion_notify_event_t *)evt;
 
-    PRINTF("pointer moved to root '%u' (%d,%d) event '%u' (%d,%d) upon child '%u' with state: %u\n",
-            e->root, e->root_x, e->root_y, e->event, e->event_x, e->event_y, e->child, e->state);
+    PRINTF("pointer on child '%u' at root (%d,%d)\n", e->child, e->root_x, e->root_y);
 
     if (!cfg.flist->is_floating) {
         cfg.flist->is_floating = true;
