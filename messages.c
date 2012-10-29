@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include "messages.h"
+#include "common.h"
 #include "helpers.h"
 #include "monitor.h"
 #include "client.h"
@@ -12,6 +13,7 @@ void quit(void)
     cfg.running = false;
 }
 
+static
 void kill(void)
 {
     if (!cfg.flist)
@@ -48,27 +50,89 @@ void focus_mprev(void)
     client_focus_first(cfg.monitors);
 }
 
+inline static
+void set_border(char *border)
+{
+    int status = sscanf(border, "%hu", &cfg.monitors->border);
+    if (status != EOF && status != 0)
+        tile(cfg.monitors);
+}
+
+inline static
+void set_spacer(char *spacer)
+{
+    int status = sscanf(spacer, "%hu", &cfg.monitors->spacer);
+    if (status != EOF && status != 0)
+        tile(cfg.monitors);
+}
+
+inline static
+void set_m_wins(char *m_wins)
+{
+    int status = sscanf(m_wins, "%hu", &cfg.monitors->m_wins);
+    if (status != EOF && status != 0)
+        tile(cfg.monitors);
+}
+
+static
+void set_layout(char *layout)
+{
+    if (strcmp(layout, "tile") == 0)
+        cfg.monitors->layout = VSTACK;
+    else if (strcmp(layout, "vstack") == 0)
+        cfg.monitors->layout = VSTACK;
+    else if (strcmp(layout, "nvstack") == 0)
+        cfg.monitors->layout = VSTACK;
+    else if (strcmp(layout, "bstack") == 0)
+        cfg.monitors->layout = HSTACK;
+    else if (strcmp(layout, "hstack") == 0)
+        cfg.monitors->layout = HSTACK;
+    else if (strcmp(layout, "nhstack") == 0)
+        cfg.monitors->layout = HSTACK;
+    else if (strcmp(layout, "grid") == 0)
+        cfg.monitors->layout = GRID;
+    else if (strcmp(layout, "max") == 0)
+        cfg.monitors->layout = MONOCLE;
+    else if (strcmp(layout, "monocle") == 0)
+        cfg.monitors->layout = MONOCLE;
+    else
+        warn("invalid layout: %s\n", layout);
+    tile(cfg.monitors);
+}
+
 void process_message(char *msg, char *rsp)
 {
     PRINTF("got message: %s\n", msg);
 
-    if (!msg || strlen(msg) == 0)
+    char *cmd = strtok(msg, TOKEN_SEP);
+
+    if (!cmd || strlen(cmd) == 0)
         return;
-    else if (strcmp(msg, "quit") == 0)
+    else if (strcmp(cmd, "quit") == 0)
         quit();
-    else if (strcmp(msg, "kill") == 0)
+    else if (strcmp(cmd, "kill") == 0)
         kill();
-    else if (strcmp(msg, "tile") == 0)
+    else if (strcmp(cmd, "tile") == 0)
         tile(cfg.monitors);
-    else if (strcmp(msg, "cnext") == 0)
+    else if (strcmp(cmd, "cnext") == 0)
         focus_cnext();
-    else if (strcmp(msg, "cprev") == 0)
+    else if (strcmp(cmd, "cprev") == 0)
         focus_cprev();
-    else if (strcmp(msg, "mnext") == 0)
+    else if (strcmp(cmd, "mnext") == 0)
         focus_mnext();
-    else if (strcmp(msg, "mprev") == 0)
+    else if (strcmp(cmd, "mprev") == 0)
         focus_mprev();
+    else if (strcmp(cmd, "border") == 0)
+        set_border(strtok(NULL, TOKEN_SEP));
+    else if (strcmp(cmd, "spacer") == 0)
+        set_spacer(strtok(NULL, TOKEN_SEP));
+    else if (strcmp(cmd, "m_wins") == 0)
+        set_m_wins(strtok(NULL, TOKEN_SEP));
+    else if (strcmp(cmd, "layout") == 0)
+        set_layout(strtok(NULL, TOKEN_SEP));
     else
-        warn("unknown message: %s\n", msg);
+        warn("unknown command: %s\n", cmd);
+
+    PRINTF("composed response: %s\n", rsp);
 }
 
