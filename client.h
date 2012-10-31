@@ -42,4 +42,7 @@ void client_update_geom(client_t *);
 void client_update_border(const client_t *);
 void client_toggle_fullscreen(client_t *);
 
+void client_hide(const client_t *);
+void client_show(const client_t *);
+
 #endif

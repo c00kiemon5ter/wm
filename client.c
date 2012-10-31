@@ -311,6 +311,18 @@ void client_update_border(const client_t *c)
     window_set_border_width(c->win, c->mon->border);
 }
 
+inline
+void client_hide(const client_t *c)
+{
+    window_hide(c->win);
+}
+
+inline
+void client_show(const client_t *c)
+{
+    window_show(c->win);
+}
+
 void client_toggle_fullscreen(client_t *c)
 {
     c->is_fullscrn = !c->is_fullscrn;
