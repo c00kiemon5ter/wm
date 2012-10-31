@@ -22,10 +22,10 @@
 #define BIT_CLEAR(x,b)      ((x) &= (1 << (b)))
 #define BIT_CHECK(x,b)      ((x) &  (1 << (b)))
 
-#define BITMASK_SET(x,m)    ((x) |=   (m))
-#define BITMASK_FLIP(x,m)   ((x) ^=   (m))
-#define BITMASK_CLEAR(x,m)  ((x) &= (~(m)))
-#define BITMASK_CHECK(x,m)  ((x) &    (m))
+#define BITMASK_SET(x,m)    ((x) |=  (m))
+#define BITMASK_FLIP(x,m)   ((x) ^=  (m))
+#define BITMASK_CLEAR(x,m)  ((x) &= ~(m))
+#define BITMASK_CHECK(x,m)  ((x) &   (m))
 
 #define BUF_BITS_SIZE        (CHAR_BIT * sizeof(uintmax_t) + 1)
 char *bitstr(uintmax_t, char [static BUF_BITS_SIZE]);
