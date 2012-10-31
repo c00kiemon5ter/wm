@@ -193,10 +193,13 @@ void tile(const monitor_t *mon)
     unsigned short num_windows = 0;
     for (client_t *c = cfg.vlist; c; c = c->vnext)
         if (ON_MONITOR(mon, c) && IS_VISIBLE(c)) {
+            client_show(c);
             client_update_border(c);
             if (IS_TILED(c)) {
                 ++num_windows;
             }
+        } else {
+            client_hide(c);
         }
 
     if (!num_windows)

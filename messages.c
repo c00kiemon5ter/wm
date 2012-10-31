@@ -83,21 +83,58 @@ void set_layout(char *layout)
         cfg.monitors->layout = VSTACK;
     else if (strcmp(layout, "nvstack") == 0)
         cfg.monitors->layout = VSTACK;
+
     else if (strcmp(layout, "bstack") == 0)
         cfg.monitors->layout = HSTACK;
     else if (strcmp(layout, "hstack") == 0)
         cfg.monitors->layout = HSTACK;
     else if (strcmp(layout, "nhstack") == 0)
         cfg.monitors->layout = HSTACK;
+
     else if (strcmp(layout, "grid") == 0)
         cfg.monitors->layout = GRID;
+
     else if (strcmp(layout, "max") == 0)
         cfg.monitors->layout = MONOCLE;
     else if (strcmp(layout, "monocle") == 0)
         cfg.monitors->layout = MONOCLE;
+
     else
         warn("invalid layout: %s\n", layout);
     tile(cfg.monitors);
+}
+
+static
+void set_ctag(char *tag)
+{
+    uint16_t ntag = 0;
+    int status = sscanf(tag, "%hu", &ntag);
+    if (status != EOF && status != 0)
+        BIT_FLIP(cfg.flist->tags, ntag);
+}
+
+static
+void set_mtag(char *tag)
+{
+    uint16_t ntag = 0;
+    int status = sscanf(tag, "%hu", &ntag);
+    if (status != EOF && status != 0) {
+        BIT_FLIP(cfg.monitors->tags, ntag);
+        tile(cfg.monitors);
+    }
+}
+
+static
+void goto_tag(char *tag)
+{
+    uint16_t ntag = 0;
+    int status = sscanf(tag, "%hu", &ntag);
+    if (status != EOF && status != 0) {
+        cfg.monitors->tags = 0;
+        BITMASK_SET(cfg.monitors->tags, ntag);
+        tile(cfg.monitors);
+        client_focus_first(cfg.monitors);
+    }
 }
 
 void process_message(char *msg, char *rsp)
@@ -130,6 +167,12 @@ void process_message(char *msg, char *rsp)
         set_m_wins(strtok(NULL, TOKEN_SEP));
     else if (strcmp(cmd, "layout") == 0)
         set_layout(strtok(NULL, TOKEN_SEP));
+    else if (strcmp(cmd, "ctag") == 0)
+        set_ctag(strtok(NULL, TOKEN_SEP));
+    else if (strcmp(cmd, "mtag") == 0)
+        set_mtag(strtok(NULL, TOKEN_SEP));
+    else if (strcmp(cmd, "gtag") == 0)
+        goto_tag(strtok(NULL, TOKEN_SEP));
     else
         warn("unknown command: %s\n", cmd);
 
