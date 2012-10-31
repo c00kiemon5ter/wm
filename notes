@@ -32,6 +32,14 @@ union overlay {
 | TO.DO |
 +-------+
 
+tag selection
+toggle floating
 messages interface
 update ewmh info (desktops, client list etc)
+randr output check
+    primary monitor
+    mirrored output
+    overlapping outputs
+
+randr extension: http://cgit.freedesktop.org/xorg/proto/randrproto/tree/randrproto.txt
 
