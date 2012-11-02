@@ -127,21 +127,22 @@ void client_unlink(client_t *c)
  */
 void client_focus(client_t *c)
 {
-    PRINTF("focusing client: %u\n", c ? c->win : 0);
+    xcb_window_t w = c ? c->win : XCB_NONE;
 
-    ewmh_update_active_window(c ? c->win : 0);
+    PRINTF("focusing client: %u\n", w);
 
-    if (!c || cfg.flist == c)
-        return;
+    ewmh_update_active_window(w);
 
-    client_funlink(c);
-    client_flink(c);
-    monitor_focus(c->mon);
+    if (c && cfg.flist != c) {
+        client_funlink(c);
+        client_flink(c);
+        monitor_focus(c->mon);
+        client_update_border(c);
+    }
 
-    client_update_border(c);
-    xcb_set_input_focus(cfg.conn, XCB_INPUT_FOCUS_POINTER_ROOT, c->win, XCB_CURRENT_TIME);
+    xcb_set_input_focus(cfg.conn, XCB_INPUT_FOCUS_POINTER_ROOT, w, XCB_CURRENT_TIME);
 
-    PRINTF("focused client is: %u\n", c->win);
+    PRINTF("focused client is: %u\n", w);
 }
 
 void client_focus_next(void)
@@ -219,6 +220,11 @@ void client_remove(client_t *c)
 {
     PRINTF("removing client: %u\n", c->win);
 
+    /* FIXME * fnext maybe on another monitor
+     * ie we removed the only window on this
+     * monitor or we just switched to this monitor
+     * and the rest of the clients are not on the
+     * top of flist */
     client_focus(c->fnext);
     client_unlink(c);
     free(c);
