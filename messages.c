@@ -22,16 +22,17 @@ bool quit(__attribute__((unused)) char *unused)
 static
 bool kill(__attribute__((unused)) char *unused)
 {
-    if (cfg.flist) {
-        monitor_t *m = cfg.flist->mon;
-        if (!client_kill(cfg.flist))
-            tile(m);
-    }
+    if (!cfg.flist || !IS_VISIBLE(cfg.flist) || !ON_MONITOR(cfg.monitors, cfg.flist))
+        return false;
+
+    monitor_t *m = cfg.flist->mon;
+    if (!client_kill(cfg.flist))
+        tile(m);
 
     return true;
 }
 
-static inline
+inline static
 bool mtile(__attribute__((unused)) char *unused)
 {
     tile(cfg.monitors);
@@ -41,45 +42,70 @@ bool mtile(__attribute__((unused)) char *unused)
 static
 bool toggle_floating(__attribute__((unused)) char *unused)
 {
-    if (cfg.flist) {
-        cfg.flist->is_floating = !cfg.flist->is_floating;
-        tile(cfg.monitors);
-    }
+    if (!cfg.flist || !IS_VISIBLE(cfg.flist) || !ON_MONITOR(cfg.monitors, cfg.flist))
+        return false;
+
+    cfg.flist->is_floating = !cfg.flist->is_floating;
+    tile(cfg.monitors);
 
     return true;
 }
 
-inline static
+static
 bool focus_cnext(__attribute__((unused)) char *unused)
 {
-    client_focus_next();
+    if (!cfg.flist || !IS_VISIBLE(cfg.flist) || !ON_MONITOR(cfg.monitors, cfg.flist))
+        return false;
+
+    client_t *c = client_vnext(cfg.flist, cfg.flist->mon);
+    client_focus(c);
+
     return true;
 }
 
-inline static
+static
 bool focus_cprev(__attribute__((unused)) char *unused)
 {
-    client_focus_prev();
+    if (!cfg.flist || !IS_VISIBLE(cfg.flist) || !ON_MONITOR(cfg.monitors, cfg.flist))
+        return false;
+
+    client_t *c = client_vprev(cfg.flist, cfg.flist->mon);
+    client_focus(c);
+
     return true;
 }
 
-inline static
+static
 bool focus_mnext(__attribute__((unused)) char *unused)
 {
-    monitor_focus_next();
-    client_focus_first(cfg.monitors);
+    monitor_t *m = monitor_next(cfg.monitors);
+    monitor_focus(m);
+
+    client_t *c = cfg.flist;
+    if (c && (!IS_VISIBLE(c) || !ON_MONITOR(m, c)))
+        c = client_fnext(c, m);
+
+    client_focus(c);
+
     return true;
 }
 
-inline static
+static
 bool focus_mprev(__attribute__((unused)) char *unused)
 {
-    monitor_focus_prev();
-    client_focus_first(cfg.monitors);
+    monitor_t *m = monitor_prev(cfg.monitors);
+    monitor_focus(m);
+
+    client_t *c = cfg.flist;
+    if (c && (!IS_VISIBLE(c) || !ON_MONITOR(m, c)))
+        c = client_fnext(c, m);
+
+    client_focus(c);
+
     return true;
 }
 
-inline static
+static
 bool set_border(char *border)
 {
     if (!border)
@@ -94,7 +120,7 @@ bool set_border(char *border)
     return true;
 }
 
-inline static
+static
 bool set_spacer(char *spacer)
 {
     if (!spacer)
@@ -109,7 +135,7 @@ bool set_spacer(char *spacer)
     return true;
 }
 
-inline static
+static
 bool set_m_wins(char *m_wins)
 {
     if (!m_wins)
@@ -132,36 +158,39 @@ bool set_layout(char *mode)
 
     layout_t layout = LAYOUTS;
 
+    /* side stack layout */
     if (strcmp(mode, "tile") == 0)
         layout = VSTACK;
     else if (strcmp(mode, "vstack") == 0)
         layout = VSTACK;
     else if (strcmp(mode, "nvstack") == 0)
         layout = VSTACK;
-
+    /* bottom stack layout */
     else if (strcmp(mode, "bstack") == 0)
         layout = HSTACK;
     else if (strcmp(mode, "hstack") == 0)
         layout = HSTACK;
     else if (strcmp(mode, "nhstack") == 0)
         layout = HSTACK;
-
-    else if (strcmp(mode, "grid") == 0)
-        layout = GRID;
-
+    /* monocle / max layout */
     else if (strcmp(mode, "max") == 0)
         layout = MONOCLE;
     else if (strcmp(mode, "monocle") == 0)
         layout = MONOCLE;
-
+    /* grid layout */
+    else if (strcmp(mode, "grid") == 0)
+        layout = GRID;
+    /* float layout */
     else if (strcmp(mode, "float") == 0)
         layout = FLOAT;
 
     if (layout == LAYOUTS)
         return false;
 
-    if (cfg.monitors->layout != layout)
+    if (cfg.monitors->layout != layout) {
+        cfg.monitors->layout = layout;
         tile(cfg.monitors);
+    }
 
     return true;
 }
@@ -178,9 +207,20 @@ bool set_ctag(char *tag)
     if (status == EOF || status == 0 || ntag >= LENGTH(cfg.tag_names))
         return false;
 
-    /* FIXME what if there is no tag left set ? */
-    if (cfg.flist)
-        BIT_FLIP(cfg.flist->tags, ntag);
+    if (!cfg.flist || !IS_VISIBLE(cfg.flist) || !ON_MONITOR(cfg.monitors, cfg.flist))
+        return false;
+
+    BIT_FLIP(cfg.flist->tags, ntag);
+    tile(cfg.monitors);
+
+    /* FIXME ctag -- what if there is no set tag left ? */
+    // if (!cfg.flist->tags)
+    //     cfg.flist->tags = ??;
+
+    if (!IS_VISIBLE(cfg.flist)) {
+        client_t *c = client_fnext(cfg.flist, cfg.monitors);
+        client_focus(c);
+    }
 
     return true;
 }
@@ -197,8 +237,10 @@ bool set_mtag(char *tag)
     if (status == EOF || status == 0 || ntag >= LENGTH(cfg.tag_names))
         return false;
 
+    /* FIXME mtag -- what if there is no set tag left ? */
     BIT_FLIP(cfg.monitors->tags, ntag);
     tile(cfg.monitors);
+
     return true;
 }
 
@@ -214,11 +256,37 @@ bool goto_tag(char *tag)
     if (status == EOF || status == 0 || ntag >= LENGTH(cfg.tag_names))
         return false;
 
-    BITMASK_CLEAR(cfg.monitors->tags, cfg.monitors->tags);
+    cfg.monitors->tags = 0;
     BIT_SET(cfg.monitors->tags, ntag);
 
     tile(cfg.monitors);
-    client_focus_first(cfg.monitors);
+
+    client_t *c = cfg.flist;
+    if (c && (!IS_VISIBLE(c) || !ON_MONITOR(cfg.monitors, c)))
+        c = client_fnext(c, cfg.monitors);
+
+    client_focus(c);
+
+    return true;
+}
+
+static
+bool sticky(__attribute__((unused)) char *unused)
+{
+    if (!cfg.flist || !IS_VISIBLE(cfg.flist) || !ON_MONITOR(cfg.monitors, cfg.flist))
+        return false;
+
+    cfg.flist->tags = -1;
+
+    return true;
+}
+
+static
+bool boom(__attribute__((unused)) char *unused)
+{
+    cfg.monitors->tags = -1;
+    tile(cfg.monitors);
+
     return true;
 }
 
@@ -243,6 +311,10 @@ void process_message(char *msg, char *rsp)
         func = set_mtag;
     else if (strcmp(cmd, "gtag") == 0)
         func = goto_tag;
+    else if (strcmp(cmd, "boom") == 0)
+        func = boom;
+    else if (strcmp(cmd, "sticky") == 0)
+        func = sticky;
     else if (strcmp(cmd, "cnext") == 0)
         func = focus_cnext;
     else if (strcmp(cmd, "cprev") == 0)
