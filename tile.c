@@ -202,10 +202,10 @@ void tile(const monitor_t *mon)
             client_hide(c);
         }
 
+    PRINTF("found '%u' windows to tile on monitor\n", num_windows);
+
     if (!num_windows)
         return;
-
-    PRINTF("found '%u' windows to tile on monitor\n", num_windows);
 
     /* if a single window then maximize it */
     if (num_windows == 1) {
