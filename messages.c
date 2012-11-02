@@ -175,10 +175,13 @@ bool set_ctag(char *tag)
     uint16_t ntag = 0;
     int status = sscanf(tag, "%hu", &ntag);
 
-    if (status == EOF || status == 0 || ntag > sizeof(uint16_t)*CHAR_BIT)
+    if (status == EOF || status == 0 || ntag >= LENGTH(cfg.tag_names))
         return false;
 
-    BIT_FLIP(cfg.flist->tags, ntag);
+    /* FIXME what if there is no tag left set ? */
+    if (cfg.flist)
+        BIT_FLIP(cfg.flist->tags, ntag);
+
     return true;
 }
 
@@ -191,7 +194,7 @@ bool set_mtag(char *tag)
     uint16_t ntag = 0;
     int status = sscanf(tag, "%hu", &ntag);
 
-    if (status == EOF || status == 0 || ntag > sizeof(uint16_t)*CHAR_BIT)
+    if (status == EOF || status == 0 || ntag >= LENGTH(cfg.tag_names))
         return false;
 
     BIT_FLIP(cfg.monitors->tags, ntag);
@@ -208,11 +211,12 @@ bool goto_tag(char *tag)
     uint16_t ntag = 0;
     int status = sscanf(tag, "%hu", &ntag);
 
-    if (status == EOF || status == 0 || ntag > sizeof(uint16_t)*CHAR_BIT)
+    if (status == EOF || status == 0 || ntag >= LENGTH(cfg.tag_names))
         return false;
 
-    cfg.monitors->tags = 0;
-    BITMASK_SET(cfg.monitors->tags, ntag);
+    BITMASK_CLEAR(cfg.monitors->tags, cfg.monitors->tags);
+    BIT_SET(cfg.monitors->tags, ntag);
+
     tile(cfg.monitors);
     client_focus_first(cfg.monitors);
     return true;
