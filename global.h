@@ -24,6 +24,7 @@ typedef enum {
     GRID,
     MONOCLE,
     FLOAT,
+    LAYOUTS
 } layout_t;
 
 /**
