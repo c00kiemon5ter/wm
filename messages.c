@@ -8,9 +8,9 @@
 #include "client.h"
 #include "tile.h"
 
-#define OK_RESPONSE         "ok"
-#define INVALID_INPUT       "invalid input"
-#define UNKNOWN_COMMAND     "unknown command"
+#define OK_RESPONSE         ":) ok"
+#define INVALID_INPUT       ":( invalid input"
+#define UNKNOWN_COMMAND     ":S unknown command"
 
 inline static
 bool quit(__attribute__((unused)) char *unused)
@@ -20,7 +20,7 @@ bool quit(__attribute__((unused)) char *unused)
 }
 
 static
-bool kill(__attribute__((unused)) char *unused)
+bool kill_client(__attribute__((unused)) char *unused)
 {
     if (!cfg.flist || !IS_VISIBLE(cfg.flist) || !ON_MONITOR(cfg.monitors, cfg.flist))
         return false;
@@ -33,26 +33,117 @@ bool kill(__attribute__((unused)) char *unused)
 }
 
 inline static
-bool mtile(__attribute__((unused)) char *unused)
+bool tile_monitor(__attribute__((unused)) char *unused)
 {
     tile(cfg.monitors);
     return true;
 }
 
 static
-bool toggle_floating(__attribute__((unused)) char *unused)
+bool tag_client(char *tag)
+{
+    if (!tag)
+        return false;
+
+    uint16_t ntag = 0;
+    int status = sscanf(tag, "%hu", &ntag);
+
+    if (status == EOF || status == 0 || ntag >= LENGTH(cfg.tag_names))
+        return false;
+
+    if (!cfg.flist || !IS_VISIBLE(cfg.flist) || !ON_MONITOR(cfg.monitors, cfg.flist))
+        return false;
+
+    BIT_FLIP(cfg.flist->tags, ntag);
+    tile(cfg.monitors);
+
+    /* FIXME ctag -- what if there is no set tag left ? how do we access the window again ? */
+    // if (!cfg.flist->tags)
+    //     cfg.flist->tags = ??;
+
+    if (!IS_VISIBLE(cfg.flist)) {
+        client_t *c = client_fnext(cfg.flist, cfg.monitors);
+        client_focus(c);
+    }
+
+    return true;
+}
+
+static
+bool tag_monitor(char *tag)
+{
+    if (!tag)
+        return false;
+
+    uint16_t ntag = 0;
+    int status = sscanf(tag, "%hu", &ntag);
+
+    if (status == EOF || status == 0 || ntag >= LENGTH(cfg.tag_names))
+        return false;
+
+    BIT_FLIP(cfg.monitors->tags, ntag);
+    tile(cfg.monitors);
+
+    return true;
+}
+
+static
+bool view_tag(char *tag)
+{
+    if (!tag)
+        return false;
+
+    uint16_t ntag = 0;
+    int status = sscanf(tag, "%hu", &ntag);
+
+    if (status == EOF || status == 0 || ntag >= LENGTH(cfg.tag_names))
+        return false;
+
+    cfg.monitors->tags = 0;
+    BIT_SET(cfg.monitors->tags, ntag);
+
+    tile(cfg.monitors);
+
+    client_t *c = cfg.flist;
+    if (c && (!IS_VISIBLE(c) || !ON_MONITOR(cfg.monitors, c)))
+        c = client_fnext(c, cfg.monitors);
+
+    client_focus(c);
+
+    return true;
+}
+
+static
+bool hide_all(__attribute__((unused)) char *unused)
+{
+    cfg.monitors->tags = 0;
+    tile(cfg.monitors);
+
+    return true;
+}
+
+static
+bool show_all(__attribute__((unused)) char *unused)
+{
+    cfg.monitors->tags = -1;
+    tile(cfg.monitors);
+
+    return true;
+}
+
+static
+bool sticky(__attribute__((unused)) char *unused)
 {
     if (!cfg.flist || !IS_VISIBLE(cfg.flist) || !ON_MONITOR(cfg.monitors, cfg.flist))
         return false;
 
-    cfg.flist->is_floating = !cfg.flist->is_floating;
-    tile(cfg.monitors);
+    cfg.flist->tags = -1;
 
     return true;
 }
 
 static
-bool focus_cnext(__attribute__((unused)) char *unused)
+bool focus_next_client(__attribute__((unused)) char *unused)
 {
     if (!cfg.flist || !IS_VISIBLE(cfg.flist) || !ON_MONITOR(cfg.monitors, cfg.flist))
         return false;
@@ -64,7 +155,7 @@ bool focus_cnext(__attribute__((unused)) char *unused)
 }
 
 static
-bool focus_cprev(__attribute__((unused)) char *unused)
+bool focus_prev_client(__attribute__((unused)) char *unused)
 {
     if (!cfg.flist || !IS_VISIBLE(cfg.flist) || !ON_MONITOR(cfg.monitors, cfg.flist))
         return false;
@@ -76,7 +167,7 @@ bool focus_cprev(__attribute__((unused)) char *unused)
 }
 
 static
-bool focus_mnext(__attribute__((unused)) char *unused)
+bool focus_next_monitor(__attribute__((unused)) char *unused)
 {
     monitor_t *m = monitor_next(cfg.monitors);
     monitor_focus(m);
@@ -91,7 +182,7 @@ bool focus_mnext(__attribute__((unused)) char *unused)
 }
 
 static
-bool focus_mprev(__attribute__((unused)) char *unused)
+bool focus_prev_monitor(__attribute__((unused)) char *unused)
 {
     monitor_t *m = monitor_prev(cfg.monitors);
     monitor_focus(m);
@@ -196,95 +287,12 @@ bool set_layout(char *mode)
 }
 
 static
-bool set_ctag(char *tag)
-{
-    if (!tag)
-        return false;
-
-    uint16_t ntag = 0;
-    int status = sscanf(tag, "%hu", &ntag);
-
-    if (status == EOF || status == 0 || ntag >= LENGTH(cfg.tag_names))
-        return false;
-
-    if (!cfg.flist || !IS_VISIBLE(cfg.flist) || !ON_MONITOR(cfg.monitors, cfg.flist))
-        return false;
-
-    BIT_FLIP(cfg.flist->tags, ntag);
-    tile(cfg.monitors);
-
-    /* FIXME ctag -- what if there is no set tag left ? */
-    // if (!cfg.flist->tags)
-    //     cfg.flist->tags = ??;
-
-    if (!IS_VISIBLE(cfg.flist)) {
-        client_t *c = client_fnext(cfg.flist, cfg.monitors);
-        client_focus(c);
-    }
-
-    return true;
-}
-
-static
-bool set_mtag(char *tag)
-{
-    if (!tag)
-        return false;
-
-    uint16_t ntag = 0;
-    int status = sscanf(tag, "%hu", &ntag);
-
-    if (status == EOF || status == 0 || ntag >= LENGTH(cfg.tag_names))
-        return false;
-
-    /* FIXME mtag -- what if there is no set tag left ? */
-    BIT_FLIP(cfg.monitors->tags, ntag);
-    tile(cfg.monitors);
-
-    return true;
-}
-
-static
-bool goto_tag(char *tag)
-{
-    if (!tag)
-        return false;
-
-    uint16_t ntag = 0;
-    int status = sscanf(tag, "%hu", &ntag);
-
-    if (status == EOF || status == 0 || ntag >= LENGTH(cfg.tag_names))
-        return false;
-
-    cfg.monitors->tags = 0;
-    BIT_SET(cfg.monitors->tags, ntag);
-
-    tile(cfg.monitors);
-
-    client_t *c = cfg.flist;
-    if (c && (!IS_VISIBLE(c) || !ON_MONITOR(cfg.monitors, c)))
-        c = client_fnext(c, cfg.monitors);
-
-    client_focus(c);
-
-    return true;
-}
-
-static
-bool sticky(__attribute__((unused)) char *unused)
+bool toggle_floating(__attribute__((unused)) char *unused)
 {
     if (!cfg.flist || !IS_VISIBLE(cfg.flist) || !ON_MONITOR(cfg.monitors, cfg.flist))
         return false;
 
-    cfg.flist->tags = -1;
-
-    return true;
-}
-
-static
-bool boom(__attribute__((unused)) char *unused)
-{
-    cfg.monitors->tags = -1;
+    cfg.flist->is_floating = !cfg.flist->is_floating;
     tile(cfg.monitors);
 
     return true;
@@ -302,27 +310,29 @@ void process_message(char *msg, char *rsp)
     else if (strcmp(cmd, "quit") == 0)
         func = quit;
     else if (strcmp(cmd, "kill") == 0)
-        func = kill;
+        func = kill_client;
     else if (strcmp(cmd, "tile") == 0)
-        func = mtile;
-    else if (strcmp(cmd, "ctag") == 0)
-        func = set_ctag;
-    else if (strcmp(cmd, "mtag") == 0)
-        func = set_mtag;
-    else if (strcmp(cmd, "gtag") == 0)
-        func = goto_tag;
-    else if (strcmp(cmd, "boom") == 0)
-        func = boom;
+        func = tile_monitor;
+    else if (strcmp(cmd, "tagc") == 0)
+        func = tag_client;
+    else if (strcmp(cmd, "tagm") == 0)
+        func = tag_monitor;
+    else if (strcmp(cmd, "vtag") == 0)
+        func = view_tag;
+    else if (strcmp(cmd, "hideall") == 0)
+        func = hide_all;
+    else if (strcmp(cmd, "showall") == 0)
+        func = show_all;
     else if (strcmp(cmd, "sticky") == 0)
         func = sticky;
-    else if (strcmp(cmd, "cnext") == 0)
-        func = focus_cnext;
-    else if (strcmp(cmd, "cprev") == 0)
-        func = focus_cprev;
-    else if (strcmp(cmd, "mnext") == 0)
-        func = focus_mnext;
-    else if (strcmp(cmd, "mprev") == 0)
-        func = focus_mprev;
+    else if (strcmp(cmd, "nextc") == 0)
+        func = focus_next_client;
+    else if (strcmp(cmd, "prevc") == 0)
+        func = focus_prev_client;
+    else if (strcmp(cmd, "nextm") == 0)
+        func = focus_next_monitor;
+    else if (strcmp(cmd, "prevm") == 0)
+        func = focus_prev_monitor;
     /* ** those expect an argument ** */
     else if (strcmp(cmd, "border") == 0)
         func = set_border;
@@ -336,11 +346,11 @@ void process_message(char *msg, char *rsp)
         func = toggle_floating;
 
     if (!func)
-        snprintf(rsp, BUF_NAME_LEN, "?? %s", UNKNOWN_COMMAND);
+        snprintf(rsp, BUF_NAME_LEN, "%s", UNKNOWN_COMMAND);
     else if (func(strtok((void *)0, TOKEN_SEP)))
-        snprintf(rsp, BUF_NAME_LEN, ":: %s", OK_RESPONSE);
+        snprintf(rsp, BUF_NAME_LEN, "%s", OK_RESPONSE);
     else
-        snprintf(rsp, BUF_NAME_LEN, "!! %s", INVALID_INPUT);
+        snprintf(rsp, BUF_NAME_LEN, "%s", INVALID_INPUT);
 
     PRINTF("composed response: %s\n", rsp);
 }
