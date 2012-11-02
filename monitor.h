@@ -13,8 +13,8 @@
 #define MONITOR_DEFAULT_LAYOUT  GRID
 
 void monitor_focus(monitor_t *);
-void monitor_focus_next(void);
-void monitor_focus_prev(void);
+monitor_t *monitor_next(const monitor_t *);
+monitor_t *monitor_prev(const monitor_t *);
 
 bool randr(void);
 bool xinerama(void);

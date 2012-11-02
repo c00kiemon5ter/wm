@@ -45,21 +45,30 @@ void monitor_focus(monitor_t *mon)
     cfg.monitors = mon;
 }
 
-void monitor_focus_next(void)
+/**
+ * return the next from the given monitor
+ */
+monitor_t *monitor_next(const monitor_t *m)
 {
-    monitor_t *m = cfg.monitors->next;
-
     if (!m)
-        return;
+        return (void *)0;
 
-    monitor_focus(m);
+    return m->next ? m->next : cfg.monitors;
 }
 
-void monitor_focus_prev(void)
+/**
+ * return the previous from the given monitor
+ */
+monitor_t *monitor_prev(const monitor_t *m)
 {
-    monitor_t *m = cfg.monitors;
-    while (m && m->next) m = m->next;
-    monitor_focus(m);
+    monitor_t *prev = (void *)0;
+
+    if (!m)
+        return prev;
+
+    for (prev = cfg.monitors; prev && prev->next && prev->next != m; prev = prev->next);
+
+    return prev;
 }
 
 /* ** xcb related functions - monitor initialization ** */
