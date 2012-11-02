@@ -23,9 +23,11 @@ void client_funlink(client_t *);
 void client_unlink(client_t *);
 
 void client_focus(client_t *);
-void client_focus_next(void);
-void client_focus_prev(void);
-void client_focus_first(const monitor_t *);
+
+client_t *client_fnext(const client_t *, const monitor_t *);
+client_t *client_fprev(const client_t *, const monitor_t *);
+client_t *client_vnext(const client_t *, const monitor_t *);
+client_t *client_vprev(const client_t *, const monitor_t *);
 
 bool client_kill(client_t *);
 void client_remove(client_t *);

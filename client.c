@@ -9,6 +9,12 @@
 
 #define WINDOW_NO_NAME      "no name"
 
+typedef enum {
+    LIST_VISUAL,
+    LIST_FOCUS,
+    LIST_TYPES
+} list_t;
+
 /**
  * initialize allocate and return the new client
  */
@@ -123,7 +129,7 @@ void client_unlink(client_t *c)
 
 /**
  * focus the given client
- * make the clients monitor the current monitor
+ * set the client's monitor the current monitor
  */
 void client_focus(client_t *c)
 {
@@ -145,48 +151,88 @@ void client_focus(client_t *c)
     PRINTF("focused client is: %u\n", w);
 }
 
-void client_focus_next(void)
+/**
+ * return the next client on the given list
+ * that is visible and on the given monitor
+ */
+static
+client_t *client_next(const client_t *c, const monitor_t *m, const list_t list)
 {
-    if (!cfg.flist)
-        return;
+    if (!c || !m || list >= LIST_TYPES)
+        return (void *)0;
 
-    client_t *next = cfg.flist->vnext;
-    while (next && !(IS_VISIBLE(next) && ON_MONITOR(cfg.monitors, next)))
-            next = next->vnext;
+    client_t *next = (list == LIST_FOCUS) ? c->fnext : (list == LIST_VISUAL) ? c->vnext : (void *)0;
+    while (next && !(IS_VISIBLE(next) && ON_MONITOR(m, next)))
+        next = (list == LIST_FOCUS) ? next->fnext : (list == LIST_VISUAL) ? next->vnext : (void *)0;
 
     if (!next)
-        for (next = cfg.vlist; next != cfg.flist && !(IS_VISIBLE(next) && ON_MONITOR(cfg.monitors, next)); next = next->vnext);
+        for (next = (list == LIST_FOCUS) ? cfg.flist : (list == LIST_VISUAL) ? cfg.vlist : (void *)0;
+             next != c && !(IS_VISIBLE(next) && ON_MONITOR(m, next));
+             next = (list == LIST_FOCUS) ? next->fnext : (list == LIST_VISUAL) ? next->vnext : (void *)0);
 
-    client_focus(next);
+    return next;
 }
 
-void client_focus_prev(void)
+/**
+ * return the next visible client from the given on the given monitor
+ */
+inline
+client_t *client_vnext(const client_t *c, const monitor_t *m)
 {
-    if (!cfg.flist)
-        return;
+    return client_next(c, m, LIST_VISUAL);
+}
+
+/**
+ * return the previously focused client from the given on the given monitor
+ */
+inline
+client_t *client_fnext(const client_t *c, const monitor_t *m)
+{
+    return client_next(c, m, LIST_FOCUS);
+}
+
+/**
+ * return the previous client on the given list
+ * that is visible and on the given monitor
+ */
+static
+client_t *client_prev(const client_t *c, const monitor_t *m, const list_t list)
+{
+    if (!c || !m || list >= LIST_TYPES)
+        return (void *)0;
 
     client_t *p = (void *)0;
-    client_t *v = cfg.vlist;
+    client_t *e = (list == LIST_FOCUS) ? cfg.flist : (list == LIST_VISUAL) ? cfg.vlist : (void *)0;
 
-    for (; v && v != cfg.flist; v = v->vnext)
-        if (IS_VISIBLE(v) && ON_MONITOR(cfg.monitors, v))
-            p = v;
+    for (; e && e != c; e = (list == LIST_FOCUS) ? e->fnext : (list == LIST_VISUAL) ? e->vnext : (void *)0)
+        if (IS_VISIBLE(e) && ON_MONITOR(m, e))
+            p = e;
 
     if (!p)
-        for (v = v->vnext; v; v = v->vnext)
-            if (IS_VISIBLE(v) && ON_MONITOR(cfg.monitors, v))
-                p = v;
+        for (e = (list == LIST_FOCUS) ? c->fnext : (list == LIST_VISUAL) ? c->vnext : (void *)0; e;
+             e = (list == LIST_FOCUS) ? e->fnext : (list == LIST_VISUAL) ? e->vnext : (void *)0)
+            if (IS_VISIBLE(e) && ON_MONITOR(m, e))
+                p = e;
 
-    client_focus(p);
+    return p;
 }
 
-void client_focus_first(const monitor_t *m)
+/**
+ * return the previous visual client from the given on the given monitor
+ */
+inline
+client_t *client_vprev(const client_t *c, const monitor_t *m)
 {
-    client_t *c = cfg.flist;
-    while (c && !(IS_VISIBLE(c) && ON_MONITOR(m, c)))
-        c = c->fnext;
+    return client_prev(c, m, LIST_VISUAL);
+}
 
-    client_focus(c);
+/**
+ * return the oldest focused client from the given on the given monitor
+ */
+inline
+client_t *client_fprev(const client_t *c, const monitor_t *m)
+{
+    return client_prev(c, m, LIST_FOCUS);
 }
 
 /**
@@ -220,12 +266,11 @@ void client_remove(client_t *c)
 {
     PRINTF("removing client: %u\n", c->win);
 
-    /* FIXME * fnext maybe on another monitor
-     * ie we removed the only window on this
-     * monitor or we just switched to this monitor
-     * and the rest of the clients are not on the
-     * top of flist */
-    client_focus(c->fnext);
+    if (IS_VISIBLE(c) && ON_MONITOR(cfg.monitors, c)) {
+        client_t *f = client_fnext(c, c->mon);
+        client_focus(f);
+    }
+
     client_unlink(c);
     free(c);
 }
