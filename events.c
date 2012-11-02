@@ -116,7 +116,7 @@ void property_notify(xcb_generic_event_t *evt)
 }
 
 static
-void handle_window_remove(const xcb_window_t win)
+void event_remove_window(const xcb_window_t win)
 {
     client_t *c = client_locate(win);
     if (!c)
@@ -131,14 +131,14 @@ void destroy_notify(xcb_generic_event_t *evt)
 {
     xcb_destroy_notify_event_t *e = (xcb_destroy_notify_event_t *)evt;
     PRINTF("destroy notify %u\n", e->window);
-    handle_window_remove(e->window);
+    event_remove_window(e->window);
 }
 
 void unmap_notify(xcb_generic_event_t *evt)
 {
     xcb_unmap_notify_event_t *e = (xcb_unmap_notify_event_t *)evt;
     PRINTF("unmap notify: %u\n", e->window);
-    handle_window_remove(e->window);
+    event_remove_window(e->window);
 }
 
 /**
