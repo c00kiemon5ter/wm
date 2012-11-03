@@ -29,6 +29,9 @@ client_t *client_fprev(const client_t *, const monitor_t *);
 client_t *client_vnext(const client_t *, const monitor_t *);
 client_t *client_vprev(const client_t *, const monitor_t *);
 
+void client_move_after(client_t *, client_t *);
+void client_move_before(client_t *, client_t *);
+
 bool client_kill(client_t *);
 void client_remove(client_t *);
 

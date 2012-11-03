@@ -236,6 +236,30 @@ client_t *client_fprev(const client_t *c, const monitor_t *m)
 }
 
 /**
+ * move the given client (c)
+ * after the given client (t)
+ */
+inline
+void client_move_after(client_t *c, client_t *t)
+{
+    client_vunlink(c);
+    c->vnext = t->vnext;
+    t->vnext = c;
+}
+
+/**
+ * move the given client (c)
+ * before the given client (t)
+ *
+ * FIXME this is buggy ofcourse
+ */
+inline
+void client_move_before(client_t *c, client_t *t)
+{
+    client_move_after(t, c);
+}
+
+/**
  * close the given client's window
  * or kill it if it won't close
  *
