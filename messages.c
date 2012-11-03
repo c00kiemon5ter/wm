@@ -132,6 +132,73 @@ bool show_all(__attribute__((unused)) char *unused)
 }
 
 static
+bool move_down(__attribute__((unused)) char *unused)
+{
+    if (!cfg.flist || !IS_VISIBLE(cfg.flist) || !ON_MONITOR(cfg.monitors, cfg.flist))
+        return false;
+
+    client_t *n = client_vnext(cfg.flist, cfg.monitors);
+
+    /* f: first , c: current , n: next , l: last
+     *
+     * a) the current client is before the next one,
+     *    so it must be placed after the next one
+     * [f]->..->[c]->..->[n]->..->[l]->  ===>  [f]->..->[n]->..->[c]->..->[l]->
+     *
+     * b) the current client is after the next one,
+     *    because it is the last client on the screen,
+     *    so it must be placed on the head of the list
+     * [f]->..->[n]->..->[c]->..->[l]->  ===>  [c]->[f]->..->[n]->..->[l]->
+     */
+    bool n_after_c = false;
+    for (client_t *t = cfg.flist->vnext; t && !(n_after_c = t == n); t = t->vnext);
+
+    if (n_after_c)
+        client_move_after(cfg.flist, n);
+    else {
+        /* FIXME use client_move_before(cfg.flist, n); when it works */
+        client_vunlink(cfg.flist);
+        client_link_head(cfg.flist);
+    }
+
+    tile(cfg.monitors);
+
+    return true;
+}
+
+static
+bool move_up(__attribute__((unused)) char *unused)
+{
+    if (!cfg.flist || !IS_VISIBLE(cfg.flist) || !ON_MONITOR(cfg.monitors, cfg.flist))
+        return false;
+
+    client_t *p = client_vprev(cfg.flist, cfg.monitors);
+
+    /* f: first , p: prev , c: current , l: last
+     *
+     * a) the current client is after the prev one,
+     *    so it must be placed before the prev one
+     * [f]->..->[p]->..->[c]->..->[l]->  ===>  [f]->..->[c]->..->[p]->..->[l]->
+     *
+     * b) the current client is before the prev one,
+     *    because it is the first client on the screen,
+     *    so it must be placed on the tail of the list
+     * [f]->..->[c]->..->[p]->..->[l]->  ===>  [f]->..->[p]->..->[l]->[c]->
+     */
+    bool p_before_c = false;
+    for (client_t *t = p->vnext; t && !(p_before_c = t == cfg.flist); t = t->vnext);
+
+    if (p_before_c)
+        client_move_before(cfg.flist, p);
+    else
+        client_move_after(cfg.flist, p);
+
+    tile(cfg.monitors);
+
+    return true;
+}
+
+static
 bool sticky(__attribute__((unused)) char *unused)
 {
     if (!cfg.flist || !IS_VISIBLE(cfg.flist) || !ON_MONITOR(cfg.monitors, cfg.flist))
@@ -323,6 +390,10 @@ void process_message(char *msg, char *rsp)
         func = hide_all;
     else if (strcmp(cmd, "showall") == 0)
         func = show_all;
+    else if (strcmp(cmd, "movedn") == 0)
+        func = move_down;
+    else if (strcmp(cmd, "moveup") == 0)
+        func = move_up;
     else if (strcmp(cmd, "sticky") == 0)
         func = sticky;
     else if (strcmp(cmd, "nextc") == 0)

@@ -32,14 +32,15 @@ union overlay {
 | TO.DO |
 +-------+
 
-tag selection
-toggle floating
-messages interface
+graceful err?
+tagless client
+restack + border colors
 update ewmh info (desktops, client list etc)
+pixel perfect tiles
+
+randr extension: http://cgit.freedesktop.org/xorg/proto/randrproto/tree/randrproto.txt
 randr output check
     primary monitor
     mirrored output
     overlapping outputs
-
-randr extension: http://cgit.freedesktop.org/xorg/proto/randrproto/tree/randrproto.txt
 
