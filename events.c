@@ -17,17 +17,16 @@ void configure_request(xcb_generic_event_t *evt)
 
     client_t *c = client_locate(e->window);
     if (c && !c->is_floating) {
-        xcb_rectangle_t geom = c->is_fullscrn ? c->mon->geom : c->geom;
         const xcb_configure_notify_event_t evt = {
-            .response_type  = XCB_CONFIGURE_NOTIFY,
-            .event          = e->window,
-            .window         = e->window,
-            .above_sibling  = XCB_NONE,
-            .x      = geom.x,
-            .y      = geom.y,
-            .width  = geom.width,
-            .height = geom.height,
-            .border_width = c->mon->border,
+            .response_type = XCB_CONFIGURE_NOTIFY,
+            .event         = e->window,
+            .window        = e->window,
+            .above_sibling = XCB_NONE,
+            .x             = c->geom.x,
+            .y             = c->geom.y,
+            .width         = c->geom.width,
+            .height        = c->geom.height,
+            .border_width  = c->mon->border,
             .override_redirect = false
         };
         xcb_send_event(cfg.conn, false, e->window, XCB_EVENT_MASK_STRUCTURE_NOTIFY, (const char *)&evt);
