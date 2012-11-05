@@ -7,8 +7,8 @@
 #define POINTER_RESET       68
 #define POINTER_TCORSS      130
 
-bool window_grab_pointer(xcb_cursor_t);
-void window_ungrab_pointer(void);
-xcb_cursor_t window_get_pointer(const uint16_t);
+bool pointer_grab(xcb_cursor_t);
+void pointer_ungrab(void);
+xcb_cursor_t pointer_get_by_id(const uint16_t);
 
 #endif
