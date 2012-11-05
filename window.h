@@ -19,4 +19,7 @@ void window_set_border_width(const xcb_window_t, const uint16_t);
 void window_show(const xcb_window_t);
 void window_hide(const xcb_window_t);
 
+void window_raise(const xcb_window_t);
+void window_lower(const xcb_window_t);
+
 #endif

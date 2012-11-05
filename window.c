@@ -115,3 +115,17 @@ void window_hide(const xcb_window_t win)
     window_set_visibility(win, false);
 }
 
+/* ** window stacking order functions ** */
+
+void window_raise(const xcb_window_t win)
+{
+    const uint32_t values[] = { XCB_STACK_MODE_ABOVE };
+    xcb_configure_window(cfg.conn, win, XCB_CONFIG_WINDOW_STACK_MODE, values);
+}
+
+void window_lower(const xcb_window_t win)
+{
+    const uint32_t values[] = { XCB_STACK_MODE_BELOW };
+    xcb_configure_window(cfg.conn, win, XCB_CONFIG_WINDOW_STACK_MODE, values);
+}
+
