@@ -387,6 +387,12 @@ void client_update_border(const client_t *c)
 }
 
 inline
+void client_update_urgency(client_t *c)
+{
+    c->is_urgent = window_is_urgent(c->win);
+}
+
+inline
 void client_hide(const client_t *c)
 {
     window_hide(c->win);
@@ -408,5 +414,17 @@ void client_toggle_fullscreen(client_t *c)
         window_set_border_width(c->win, 0);
         window_move_resize_geom(c->win, c->mon->geom);
     }
+}
+
+inline
+void client_raise(const client_t *c)
+{
+    window_raise(c->win);
+}
+
+inline
+void client_lower(const client_t *c)
+{
+    window_lower(c->win);
 }
 

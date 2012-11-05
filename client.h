@@ -45,9 +45,13 @@ void client_move_resize_geom(client_t *, const xcb_rectangle_t);
 
 void client_update_geom(client_t *);
 void client_update_border(const client_t *);
+void client_update_urgency(client_t *);
 void client_toggle_fullscreen(client_t *);
 
 void client_hide(const client_t *);
 void client_show(const client_t *);
+
+void client_raise(const client_t *);
+void client_lower(const client_t *);
 
 #endif
