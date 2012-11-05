@@ -5,7 +5,6 @@
 #include "helpers.h"
 #include "client.h"
 #include "pointer.h"
-#include "window.h"
 #include "ewmh.h"
 #include "tile.h"
 
@@ -65,7 +64,7 @@ void map_request(xcb_generic_event_t *evt)
     if (!c || !IS_VISIBLE(c) || !ON_MONITOR(cfg.monitors, c))
         return;
 
-    window_show(c->win);
+    client_show(c);
     tile(c->mon);
     client_focus(c);
 }
@@ -108,10 +107,8 @@ void property_notify(xcb_generic_event_t *evt)
         return;
 
     client_t *c = client_locate(e->window);
-    if (!c)
-        return;
-
-    c->is_urgent = window_is_urgent(c->win);
+    if (c)
+        client_update_urgency(c);
 }
 
 static
@@ -192,7 +189,7 @@ void button_press(xcb_generic_event_t *evt)
 
     client_t *c = (void *)0;
     if (!e->child || !(c = client_locate(e->child))) {
-        window_ungrab_pointer();
+        pointer_ungrab();
         return;
     }
 
@@ -210,7 +207,7 @@ void button_press(xcb_generic_event_t *evt)
     }
     stage_window(e->detail, e->root_x, e->root_y);
 
-    if (!window_grab_pointer(window_get_pointer(POINTER_TCORSS)))
+    if (!pointer_grab(pointer_get_by_id(POINTER_TCORSS)))
         warn("failed to grab pointer over window: %u\n", c->win);
 }
 
@@ -230,7 +227,7 @@ void button_release(xcb_generic_event_t *evt)
             break;
     }
 
-    window_ungrab_pointer();
+    pointer_ungrab();
 }
 
 void motion_notify(xcb_generic_event_t *evt)
@@ -241,6 +238,7 @@ void motion_notify(xcb_generic_event_t *evt)
 
     if (!cfg.flist->is_floating) {
         cfg.flist->is_floating = true;
+        client_raise(cfg.flist);
         tile(cfg.flist->mon);
     }
 
