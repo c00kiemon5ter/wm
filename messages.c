@@ -12,6 +12,16 @@
 #define UNKNOWN_COMMAND     ":S unknown command"
 #define TOKEN_SEP            " "
 
+static
+void show_hide(void)
+{
+    for (client_t *c = cfg.vlist; c; c = c->vnext)
+        if (ON_MONITOR(cfg.monitors, c) && IS_VISIBLE(c) && IS_TILED(c))
+            client_show(c);
+        else
+            client_hide(c);
+}
+
 inline static
 bool quit(__attribute__((unused)) char *unused)
 {
@@ -83,15 +93,8 @@ bool tag_monitor(char *tag)
 
     BIT_FLIP(cfg.monitors->tags, ntag);
 
-    /* TODO:
-     * loop through mon clients
-     * hide non-visible clients
-     * show visible clients */
-    // FIXME: show_hide(cfg.monitors);
-    /* TODO:
-     * loop though mon clients
-     * and fix stacking order */
     // FIXME: restack(cfg.monitors);
+    show_hide();
     tile(cfg.monitors);
 
     return true;
@@ -112,7 +115,7 @@ bool view_tag(char *tag)
     cfg.monitors->tags = 0;
     BIT_SET(cfg.monitors->tags, ntag);
 
-    // FIXME: should show_hide(..)
+    show_hide();
     tile(cfg.monitors);
 
     client_t *c = cfg.flist;
@@ -128,7 +131,7 @@ static
 bool hide_all(__attribute__((unused)) char *unused)
 {
     cfg.monitors->tags = 0;
-    // FIXME: should show_hide(..)
+    show_hide();
 
     return true;
 }
@@ -137,8 +140,8 @@ static
 bool show_all(__attribute__((unused)) char *unused)
 {
     cfg.monitors->tags = -1;
+    show_hide();
     tile(cfg.monitors);
-    // FIXME: should show_hide(..)
 
     return true;
 }
