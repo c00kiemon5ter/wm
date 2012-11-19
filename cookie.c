@@ -5,10 +5,11 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
+#include "main.h"
 #include "common.h"
 #include "helpers.h"
 
-int main(int argc, char *argv[])
+int cookie(int argc, char *argv[])
 {
     int sock_fd = 0;
     struct sockaddr_un sock_address = { 0, { 0 } };

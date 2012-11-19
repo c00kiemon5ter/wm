@@ -9,6 +9,7 @@
 
 #include <xcb/xcb.h>
 
+#include "main.h"
 #include "global.h"
 #include "helpers.h"
 #include "common.h"
@@ -240,7 +241,7 @@ void cleanup(void)
     xcb_disconnect(cfg.conn);
 }
 
-int main(void)
+int cookiewm(void)
 {
     int dpy_fd = 0, sock_fd = 0;
     cfg.running = true;
