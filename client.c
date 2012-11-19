@@ -3,17 +3,35 @@
 #include "helpers.h"
 #include "monitor.h"
 #include "rules.h"
-#include "window.h"
 #include "ewmh.h"
 #include "icccm.h"
 
-#define WINDOW_NO_NAME      "no name"
+#define CONFIG_WINDOW_MOVE              XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y
+#define CONFIG_WINDOW_RESIZE            XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT
+#define CONFIG_WINDOW_MOVE_RESIZE       CONFIG_WINDOW_MOVE | CONFIG_WINDOW_RESIZE
+#define WINDOW_NO_NAME                  "no name"
 
 typedef enum {
     LIST_VISUAL,
     LIST_FOCUS,
     LIST_TYPES
 } list_t;
+
+static
+bool window_override_redirect(const xcb_window_t win)
+{
+    const xcb_get_window_attributes_cookie_t cookie = xcb_get_window_attributes(cfg.conn, win);
+    xcb_get_window_attributes_reply_t *reply = xcb_get_window_attributes_reply(cfg.conn, cookie, (void *)0);
+
+    if (!reply)
+        return false;
+
+    const bool state = reply->override_redirect;
+
+    free(reply);
+
+    return state;
+}
 
 /**
  * initialize allocate and return the new client
@@ -36,7 +54,7 @@ client_t *client_create(const xcb_window_t win)
     c->is_floating = icccm_is_transient(win) || ewmh_wm_type_dialog(win);
     c->is_urgent = false;
 
-    window_update_geom(win, &c->geom);
+    client_update_geom(c);
 
     if (!icccm_get_window_class(win, c->class, c->instance))
         warn("failed to get class and instance name for client: %u\n", win);
@@ -143,7 +161,7 @@ void client_focus(client_t *c)
         client_funlink(c);
         client_flink(c);
         monitor_focus(c->mon);
-        client_update_border(c);
+        client_update_border(c, c->mon->border);
     }
 
     xcb_set_input_focus(cfg.conn, XCB_INPUT_FOCUS_POINTER_ROOT, w, XCB_CURRENT_TIME);
@@ -350,58 +368,90 @@ client_t *handle_window(const xcb_window_t win)
 
 /* ** client move and resize functions ** */
 
-inline
 void client_move(client_t *c, const int16_t x, const int16_t y)
 {
-    window_move(c->win, c->geom.x = x, c->geom.y = y);
+    const uint32_t values[] = { c->geom.x = x, c->geom.y = y };
+    xcb_configure_window(cfg.conn, c->win, CONFIG_WINDOW_MOVE, values);
 }
 
-inline
 void client_resize(client_t *c, const uint16_t w, const uint16_t h)
 {
-    window_resize(c->win, c->geom.width = w, c->geom.height = h);
+    const uint32_t values[] = { c->geom.width = w, c->geom.height = h };
+    xcb_configure_window(cfg.conn, c->win, CONFIG_WINDOW_RESIZE, values);
 }
 
-inline
 void client_move_resize(client_t *c, const int16_t x, const int16_t y, const uint16_t w, const uint16_t h)
 {
-    window_move_resize(c->win, c->geom.x = x, c->geom.y = y, c->geom.width = w, c->geom.height = h);
+    const uint32_t values[] = { c->geom.x = x, c->geom.y = y, c->geom.width = w, c->geom.height = h };
+    xcb_configure_window(cfg.conn, c->win, CONFIG_WINDOW_MOVE_RESIZE, values);
 }
 
 inline
 void client_move_resize_geom(client_t *c, const xcb_rectangle_t geom)
 {
-    window_move_resize_geom(c->win, c->geom = geom);
+    client_move_resize(c, geom.x, geom.y, geom.width, geom.height);
 }
 
-inline
-void client_update_geom(client_t *c)
+bool client_update_geom(client_t *c)
 {
-    window_update_geom(c->win, &c->geom);
+    const xcb_get_geometry_cookie_t cookie = xcb_get_geometry(cfg.conn, c->win);
+    xcb_get_geometry_reply_t *reply = xcb_get_geometry_reply(cfg.conn, cookie, (void *)0);
+
+    if (!reply)
+        return false;
+
+    c->geom.x      = reply->x;
+    c->geom.y      = reply->y;
+    c->geom.width  = reply->width;
+    c->geom.height = reply->height;
+
+    free(reply);
+
+    return true;
 }
 
-inline
-void client_update_border(const client_t *c)
+void client_update_border(const client_t *c, const uint32_t border_width)
 {
-    window_set_border_width(c->win, c->mon->border);
+    const uint32_t values[] = { border_width };
+    xcb_configure_window(cfg.conn, c->win, XCB_CONFIG_WINDOW_BORDER_WIDTH, values);
 }
 
 inline
 void client_update_urgency(client_t *c)
 {
-    c->is_urgent = window_is_urgent(c->win);
+    c->is_urgent = icccm_has_urgent_hint(c->win);
+}
+
+/* ** visibility functions ** */
+
+static
+void window_set_visibility(const xcb_window_t win, bool visible)
+{
+    uint32_t values_off[] = { ROOT_EVENT_MASK & ~XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY };
+    uint32_t values_on[]  = { ROOT_EVENT_MASK };
+
+    xcb_grab_server(cfg.conn);
+
+    xcb_change_window_attributes(cfg.conn, cfg.screen->root, XCB_CW_EVENT_MASK, values_off);
+    if (visible)
+        xcb_map_window(cfg.conn, win);
+    else
+        xcb_unmap_window(cfg.conn, win);
+    xcb_change_window_attributes(cfg.conn, cfg.screen->root, XCB_CW_EVENT_MASK, values_on);
+
+    xcb_ungrab_server(cfg.conn);
 }
 
 inline
-void client_hide(const client_t *c)
+void client_show(const client_t* c)
 {
-    window_hide(c->win);
+    window_set_visibility(c->win, true);
 }
 
 inline
-void client_show(const client_t *c)
+void client_hide(const client_t* c)
 {
-    window_show(c->win);
+    window_set_visibility(c->win, false);
 }
 
 void client_toggle_fullscreen(client_t *c)
@@ -411,20 +461,22 @@ void client_toggle_fullscreen(client_t *c)
     xcb_ewmh_set_wm_state(cfg.ewmh, c->win, LENGTH(values), values);
 
     if (c->is_fullscrn) {
-        window_set_border_width(c->win, 0);
-        window_move_resize_geom(c->win, c->mon->geom);
+        client_update_border(c, 0);
+        client_move_resize_geom(c, c->mon->geom);
     }
 }
 
-inline
+/* ** stacking order functions ** */
+
 void client_raise(const client_t *c)
 {
-    window_raise(c->win);
+    const uint32_t values[] = { XCB_STACK_MODE_ABOVE };
+    xcb_configure_window(cfg.conn, c->win, XCB_CONFIG_WINDOW_STACK_MODE, values);
 }
 
-inline
 void client_lower(const client_t *c)
 {
-    window_lower(c->win);
+    const uint32_t values[] = { XCB_STACK_MODE_BELOW };
+    xcb_configure_window(cfg.conn, c->win, XCB_CONFIG_WINDOW_STACK_MODE, values);
 }
 

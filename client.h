@@ -43,8 +43,8 @@ void client_resize(client_t *, const uint16_t, const uint16_t);
 void client_move_resize(client_t *, const int16_t, const int16_t, const uint16_t, const uint16_t);
 void client_move_resize_geom(client_t *, const xcb_rectangle_t);
 
-void client_update_geom(client_t *);
-void client_update_border(const client_t *);
+bool client_update_geom(client_t *);
+void client_update_border(const client_t *, const uint32_t);
 void client_update_urgency(client_t *);
 void client_toggle_fullscreen(client_t *);
 

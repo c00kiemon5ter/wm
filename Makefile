@@ -11,7 +11,7 @@ LDFLAGS = $(LIBS)
 PREFIX   ?= /usr/local
 BINPREFIX = $(PREFIX)/bin
 
-SRC = wm.c helpers.c events.c messages.c monitor.c client.c rules.c pointer.c window.c ewmh.c icccm.c tile.c
+SRC = wm.c helpers.c events.c messages.c monitor.c client.c rules.c pointer.c ewmh.c icccm.c tile.c
 OBJ = $(SRC:.c=.o)
 
 all: CFLAGS += -Os
