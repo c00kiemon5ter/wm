@@ -286,7 +286,9 @@ bool set_border(char *border)
     if (status == EOF || status == 0)
         return false;
 
-    // FIXME: should set_border(..)
+    for (client_t *c = cfg.vlist; c; c = c->vnext)
+        if (ON_MONITOR(cfg.monitors, c) && IS_VISIBLE(c) && IS_TILED(c))
+            client_update_border(c, cfg.monitors->border);
     tile(cfg.monitors);
 
     return true;
