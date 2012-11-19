@@ -2,7 +2,7 @@
 
 #include <xcb/xcb_icccm.h>
 
-#include "global.h"
+#include "wm.h"
 #include "icccm.h"
 #include "helpers.h"
 

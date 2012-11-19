@@ -1,7 +1,7 @@
 #include <xcb/xcb.h>
 
 #include "pointer.h"
-#include "global.h"
+#include "wm.h"
 
 #define POINTER_GRAB_MASK   ( XCB_EVENT_MASK_BUTTON_PRESS   \
                             | XCB_EVENT_MASK_BUTTON_RELEASE \

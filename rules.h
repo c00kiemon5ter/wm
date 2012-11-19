@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-#include "global.h"
+#include "wm.h"
 
 rule_t *rule_create(void);
 void rules_apply(client_t *);

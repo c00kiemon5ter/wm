@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-#include "global.h"
+#include "wm.h"
 
 void monitor_focus(monitor_t *);
 monitor_t *monitor_next(const monitor_t *);

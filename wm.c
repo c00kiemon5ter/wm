@@ -9,7 +9,7 @@
 
 #include <xcb/xcb.h>
 
-#include "global.h"
+#include "wm.h"
 #include "helpers.h"
 #include "events.h"
 #include "messages.h"

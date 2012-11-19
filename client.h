@@ -6,7 +6,7 @@
 
 #include <xcb/xcb.h>
 
-#include "global.h"
+#include "wm.h"
 
 #define ON_MONITOR(m,c) (m == c->mon)
 #define IS_VISIBLE(c)   (BITMASK_CHECK(c->mon->tags, c->tags))

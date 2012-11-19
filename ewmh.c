@@ -1,7 +1,7 @@
 #include <string.h>
 
 #include "ewmh.h"
-#include "global.h"
+#include "wm.h"
 #include "helpers.h"
 
 void ewmh_init(void)

@@ -1,7 +1,7 @@
 #include <string.h>
 
 #include "window.h"
-#include "global.h"
+#include "wm.h"
 #include "icccm.h"
 
 #define CONFIG_WINDOW_MOVE              XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y

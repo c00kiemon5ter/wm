@@ -1,7 +1,7 @@
 #include <stdint.h>
 
 #include "events.h"
-#include "global.h"
+#include "wm.h"
 #include "helpers.h"
 #include "client.h"
 #include "pointer.h"
