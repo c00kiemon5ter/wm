@@ -2,7 +2,6 @@
 #include <stdbool.h>
 
 #include "messages.h"
-#include "common.h"
 #include "helpers.h"
 #include "monitor.h"
 #include "client.h"
@@ -11,6 +10,7 @@
 #define OK_RESPONSE         ":) ok"
 #define INVALID_INPUT       ":( invalid input"
 #define UNKNOWN_COMMAND     ":S unknown command"
+#define TOKEN_SEP            " "
 
 inline static
 bool quit(__attribute__((unused)) char *unused)

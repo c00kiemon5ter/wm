@@ -9,16 +9,17 @@
 
 #include <xcb/xcb.h>
 
-#include "main.h"
 #include "global.h"
 #include "helpers.h"
-#include "common.h"
 #include "events.h"
 #include "messages.h"
 #include "monitor.h"
 #include "client.h"
 #include "ewmh.h"
 #include "tile.h"
+
+#define DEFAULT_SOCKET_PATH  "/tmp/.cookiewm.socket"
+#define SOCKET_ENV_VAR       "COOKIE_SOCKET"
 
 struct configuration cfg = { 0, 0, 0, 0, 0, { { 0 } }, 0, 0, 0, 0 };
 
@@ -45,6 +46,8 @@ static void init_xcb(int *dpy_fd)
      */
     if (!randr() && !xinerama())
         zaphod();
+    for (size_t i = 0; i < LENGTH(cfg.tag_names); i++)
+        snprintf(cfg.tag_names[i], sizeof(cfg.tag_names[0]), "%zd", i);
 
     /* register events */
     register_root_events();
@@ -85,24 +88,6 @@ static void init_socket(int *sock_fd)
     if (listen(*sock_fd, SOMAXCONN) == -1)
         err("failed to listen for connections\n");
 
-}
-
-/**
- * initialize wm structs
- */
-void init_wm(void)
-{
-    for (monitor_t *m = cfg.monitors; m; m = m->next) {
-        BIT_SET(m->tags, MONITOR_DEFAULT_TAG);
-        m->m_area = MONITOR_DEFAULT_M_AREA;
-        m->m_wins = MONITOR_DEFAULT_M_WINS;
-        m->spacer = MONITOR_DEFAULT_SPACER;
-        m->border = MONITOR_DEFAULT_BORDER;
-        m->layout = MONITOR_DEFAULT_LAYOUT;
-    }
-
-    for (size_t i = 0; i < LENGTH(cfg.tag_names); i++)
-        snprintf(cfg.tag_names[i], sizeof(cfg.tag_names[0]), "%zd", i);
 }
 
 /**
@@ -241,7 +226,7 @@ void cleanup(void)
     xcb_disconnect(cfg.conn);
 }
 
-int cookiewm(void)
+int init_wm(void)
 {
     int dpy_fd = 0, sock_fd = 0;
     cfg.running = true;
@@ -249,7 +234,6 @@ int cookiewm(void)
     /* initialization */
     init_xcb(&dpy_fd);
     init_socket(&sock_fd);
-    init_wm();
 
     /* handle existing windows */
     scan_orphans();
@@ -266,5 +250,63 @@ int cookiewm(void)
         close(sock_fd);
 
     return EXIT_SUCCESS;
+}
+
+int send_msg(int argc, char *argv[])
+{
+    int sock_fd = 0;
+    struct sockaddr_un sock_address = { 0, { 0 } };
+    size_t msglen = 0;
+    char msg[BUFSIZ] = { 0 };
+    char rsp[BUFSIZ] = { 0 };
+
+    char *socket_path = getenv(SOCKET_ENV_VAR);
+    if (!socket_path || strlen(socket_path) == 0) {
+        warn("environmental variable '%s' is not set or empty - using default value: %s\n", SOCKET_ENV_VAR, DEFAULT_SOCKET_PATH);
+        socket_path = DEFAULT_SOCKET_PATH;
+    }
+
+    sock_address.sun_family = AF_UNIX;
+    size_t n = snprintf(sock_address.sun_path, sizeof(sock_address.sun_path), "%s", socket_path);
+    if (n >= sizeof(sock_address.sun_path))
+        err("value too long for environmental variable '%s'\n", SOCKET_ENV_VAR);
+
+    for (size_t len = sizeof(msg), n = 0; --argc && ++argv && len > 0; msglen += n, len -= n)
+        n = snprintf(msg + msglen, len, "%s ", *argv);
+
+    if (msg[msglen - 1] == ' ')
+        msg[--msglen] = '\0';
+
+    sock_fd = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (sock_fd == -1)
+        err("failed to create socket\n");
+
+    if (connect(sock_fd, (struct sockaddr *) &sock_address, sizeof(sock_address)) == -1)
+        err("failed to connect to socket\n");
+
+    if (send(sock_fd, msg, msglen, 0) == -1)
+        err("failed to send data\n");
+
+    ssize_t rsplen = recv(sock_fd, rsp, sizeof(rsp), 0);
+    if (rsplen == -1) {
+        err("failed to get response\n");
+    } else if (rsplen > 0) {
+        rsp[rsplen] = '\0';
+        printf("%s\n", rsp);
+    }
+
+    if (sock_fd)
+        close(sock_fd);
+
+    return EXIT_SUCCESS;
+}
+
+int main(int argc, char *argv[]) {
+    if (argc == 1)
+        return init_wm();
+    else if (!strcmp(argv[1], "help") || !strcmp(argv[1], "--help") || !strcmp(argv[1], "-h"))
+        puts("man " WM_NAME " # RTFM!");
+    else
+        return send_msg(argc, argv);
 }
 
