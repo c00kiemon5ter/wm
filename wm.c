@@ -29,7 +29,8 @@ struct configuration cfg = { 0, 0, 0, 0, 0, { { 0 } }, 0, 0, 0, 0 };
  * set root event mask - check for other wm
  * set ewmh atoms and default wm_name
  */
-static void init_xcb(int *dpy_fd)
+static
+void init_xcb(int *dpy_fd)
 {
     cfg.conn = xcb_connect((void *)0, &cfg.def_screen);
     if (xcb_connection_has_error(cfg.conn))
@@ -62,7 +63,8 @@ static void init_xcb(int *dpy_fd)
 /**
  * setup socket connection
  */
-static void init_socket(int *sock_fd)
+static
+void init_socket(int *sock_fd)
 {
     struct sockaddr_un sock_address = { 0,  { 0 } };
     char *socket_path = getenv(SOCKET_ENV_VAR);
@@ -94,6 +96,7 @@ static void init_socket(int *sock_fd)
  * scan for already mapped windows
  * grab and handle them
  */
+static
 void scan_orphans(void)
 {
     const xcb_query_tree_cookie_t cookie = xcb_query_tree_unchecked(cfg.conn, cfg.screen->root);
@@ -137,7 +140,8 @@ void scan_orphans(void)
  * check if a new event arrived
  * and handle the event
  */
-static void check_event(const int dpy_fd, const fd_set *fds)
+static
+void check_event(const int dpy_fd, const fd_set *fds)
 {
     if (FD_ISSET(dpy_fd, fds)) {
         xcb_generic_event_t *event = (void *)0;
@@ -156,7 +160,8 @@ static void check_event(const int dpy_fd, const fd_set *fds)
  * check if a new message arrived and
  * handle the message and the response
  */
-static void check_message(const int sock_fd, const fd_set *fds)
+static
+void check_message(const int sock_fd, const fd_set *fds)
 {
     char msg[BUFSIZ] = { 0 };
     char rsp[BUFSIZ] = { 0 };
@@ -184,7 +189,8 @@ static void check_message(const int sock_fd, const fd_set *fds)
     }
 }
 
-static void wait_event_or_message(const int dpy_fd, const int sock_fd)
+static
+void wait_event_or_message(const int dpy_fd, const int sock_fd)
 {
     fd_set fds = { { 0 } };
     const int sel = max(sock_fd, dpy_fd) + 1;
@@ -203,6 +209,7 @@ static void wait_event_or_message(const int dpy_fd, const int sock_fd)
     }
 }
 
+static
 void cleanup(void)
 {
     cfg.flist = cfg.vlist;
@@ -226,6 +233,7 @@ void cleanup(void)
     xcb_disconnect(cfg.conn);
 }
 
+static
 int init_wm(void)
 {
     int dpy_fd = 0, sock_fd = 0;
@@ -252,6 +260,7 @@ int init_wm(void)
     return EXIT_SUCCESS;
 }
 
+static
 int send_msg(int argc, char *argv[])
 {
     int sock_fd = 0;
@@ -301,7 +310,8 @@ int send_msg(int argc, char *argv[])
     return EXIT_SUCCESS;
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     if (argc == 1)
         return init_wm();
     else if (!strcmp(argv[1], "help") || !strcmp(argv[1], "--help") || !strcmp(argv[1], "-h"))
