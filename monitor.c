@@ -7,6 +7,13 @@
 #include "monitor.h"
 #include "helpers.h"
 
+#define MONITOR_DEFAULT_TAG     0
+#define MONITOR_DEFAULT_M_AREA  0
+#define MONITOR_DEFAULT_M_WINS  1
+#define MONITOR_DEFAULT_SPACER  0
+#define MONITOR_DEFAULT_BORDER  3
+#define MONITOR_DEFAULT_LAYOUT  GRID
+
 /**
  * add a new monitor to the tail of the monitor list
  */
@@ -24,6 +31,13 @@ void monitor_add(int16_t x, int16_t y, uint16_t w, uint16_t h)
     PRINTF("y: %5d\n", (*m)->geom.y);
     PRINTF("w: %5u\n", (*m)->geom.width);
     PRINTF("h: %5u\n", (*m)->geom.height);
+
+    BIT_SET((*m)->tags, MONITOR_DEFAULT_TAG);
+    (*m)->m_area = MONITOR_DEFAULT_M_AREA;
+    (*m)->m_wins = MONITOR_DEFAULT_M_WINS;
+    (*m)->spacer = MONITOR_DEFAULT_SPACER;
+    (*m)->border = MONITOR_DEFAULT_BORDER;
+    (*m)->layout = MONITOR_DEFAULT_LAYOUT;
 }
 
 /**
