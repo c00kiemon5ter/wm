@@ -55,16 +55,16 @@ bool tag_client(char *tag)
         return false;
 
     BIT_FLIP(cfg.flist->tags, ntag);
-    tile(cfg.monitors);
+
+    if (!IS_VISIBLE(cfg.flist)) {
+        tile(cfg.monitors);
+        client_hide(cfg.flist);
+        client_focus(client_fnext(cfg.flist, cfg.monitors));
+    }
 
     /* FIXME ctag -- what if there is no set tag left ? how do we access the window again ? */
     // if (!cfg.flist->tags)
     //     cfg.flist->tags = ??;
-
-    if (!IS_VISIBLE(cfg.flist)) {
-        client_t *c = client_fnext(cfg.flist, cfg.monitors);
-        client_focus(c);
-    }
 
     return true;
 }
@@ -82,6 +82,16 @@ bool tag_monitor(char *tag)
         return false;
 
     BIT_FLIP(cfg.monitors->tags, ntag);
+
+    /* TODO:
+     * loop through mon clients
+     * hide non-visible clients
+     * show visible clients */
+    // FIXME: show_hide(cfg.monitors);
+    /* TODO:
+     * loop though mon clients
+     * and fix stacking order */
+    // FIXME: restack(cfg.monitors);
     tile(cfg.monitors);
 
     return true;
@@ -102,6 +112,7 @@ bool view_tag(char *tag)
     cfg.monitors->tags = 0;
     BIT_SET(cfg.monitors->tags, ntag);
 
+    // FIXME: should show_hide(..)
     tile(cfg.monitors);
 
     client_t *c = cfg.flist;
@@ -117,7 +128,7 @@ static
 bool hide_all(__attribute__((unused)) char *unused)
 {
     cfg.monitors->tags = 0;
-    tile(cfg.monitors);
+    // FIXME: should show_hide(..)
 
     return true;
 }
@@ -127,6 +138,7 @@ bool show_all(__attribute__((unused)) char *unused)
 {
     cfg.monitors->tags = -1;
     tile(cfg.monitors);
+    // FIXME: should show_hide(..)
 
     return true;
 }
@@ -274,7 +286,9 @@ bool set_border(char *border)
     if (status == EOF || status == 0)
         return false;
 
+    // FIXME: should set_border(..)
     tile(cfg.monitors);
+
     return true;
 }
 
@@ -290,6 +304,7 @@ bool set_spacer(char *spacer)
         return false;
 
     tile(cfg.monitors);
+
     return true;
 }
 
@@ -305,6 +320,7 @@ bool set_m_wins(char *m_wins)
         return false;
 
     tile(cfg.monitors);
+
     return true;
 }
 
