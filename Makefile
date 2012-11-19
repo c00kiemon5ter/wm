@@ -1,6 +1,6 @@
 
-VERSION = "cookiejar-git"
-WM_NAME = "cookiewm"
+VERSION = "git"
+WM_NAME = "wm"
 
 CC      = cc
 LIBS    = -lxcb -lxcb-icccm -lxcb-ewmh -lxcb-xinerama -lxcb-randr
