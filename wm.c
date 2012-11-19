@@ -305,7 +305,7 @@ int main(int argc, char *argv[]) {
     if (argc == 1)
         return init_wm();
     else if (!strcmp(argv[1], "help") || !strcmp(argv[1], "--help") || !strcmp(argv[1], "-h"))
-        puts("man " WM_NAME " # RTFM!");
+        err("man %s # RTFM!\n", WM_NAME);
     else
         return send_msg(argc, argv);
 }
