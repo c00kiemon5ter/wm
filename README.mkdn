@@ -1,0 +1,26 @@
+ɯm
+--
+
+A fully dynamic tag-based window manager written built upon XCB.
+Inspired by `dwm` and `bspwm`, thank you :)
+
+under construction
+------------------
+
+This is currently under development. Not ready to use.
+
+### Todo
+
+ * cleanup POSIX namespace violation (defined types ending with `_t`)
+ * what should happen if a client ends up with no tag set ?
+ * implement restack function and border coloring
+ * fill in EWMH info
+ * make pixel perfect tiles
+ * experiment with [RandR][randr] - automatic handling of
+   - new output sources
+   - mirrored outputs
+   - overlapping outputs
+   - rotated outputs
+
+  [randr]: http://cgit.freedesktop.org/xorg/proto/randrproto/tree/randrproto.txt
+
