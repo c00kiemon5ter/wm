@@ -48,7 +48,7 @@ void init_xcb(int *dpy_fd)
     if (!randr() && !xinerama())
         zaphod();
     for (size_t i = 0; i < LENGTH(cfg.tag_names); i++)
-        snprintf(cfg.tag_names[i], sizeof(cfg.tag_names[0]), "%zd", i);
+        snprintf(cfg.tag_names[i], sizeof(cfg.tag_names[0]), "%zu", i);
 
     /* register events */
     register_root_events();
